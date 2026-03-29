@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDao {
+    public UserDao() {
+    }
+
     public long add(User user) throws SQLException {
         String sql = "insert into users(username,password_hash,salt,role) values(?,?,?,?)";
         try (Connection c = DbUtil.getConnection()) {

@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TagDao {
+    public TagDao() {
+    }
 
     public long add(Tag tag) throws SQLException {
         String sql = "insert into tags(name) values(?)";

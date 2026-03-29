@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ItemImageDao {
+    public ItemImageDao() {
+    }
 
     public long add(ItemImage itemImage) throws SQLException {
         String sql = "insert into item_images(item_id,image_url,sort_order) values(?,?,?)";

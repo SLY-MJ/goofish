@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderDao {
+    public OrderDao() {
+    }
 
     public long add(Order order) throws SQLException {
         String sql = "insert into orders(order_no,item_id,buyer_id,seller_id,amount,status) values(?,?,?,?,?,?)";

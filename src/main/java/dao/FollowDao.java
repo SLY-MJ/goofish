@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FollowDao {
+    public FollowDao() {
+    }
 
     public long add(Follow follow) throws SQLException {
         String sql = "insert into follows(follower_id,followee_id) values(?,?)";

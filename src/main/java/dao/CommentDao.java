@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommentDao {
+    public CommentDao() {
+    }
+
     public long add(Comment  comment) throws SQLException{
         String sql = "insert into comments(item_id,user_id,comment) values(?,?,?)";
         try (Connection c= DbUtil.getConnection()) {

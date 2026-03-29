@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WalletLogDao {
+    public WalletLogDao() {
+    }
 
     public long add(WalletLog walletLog) throws SQLException {
         String sql = "insert into wallet_logs(user_id,change_amount,balance_after,business_type,business_id,remark) values(?,?,?,?,?,?)";

@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FavoriteDao {
+    public FavoriteDao() {
+    }
+
     public long add(Favorite favorite) throws Exception {
         String sql = "insert into favorites(user_id,item_id) values(?,?)";
         try (Connection c = DbUtil.getConnection()) {

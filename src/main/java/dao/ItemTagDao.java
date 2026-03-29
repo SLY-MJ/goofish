@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ItemTagDao {
+    public ItemTagDao() {
+    }
 
     public long add(ItemTag itemTag) throws SQLException {
         String sql = "insert into item_tags(item_id,tag_id) values(?,?)";

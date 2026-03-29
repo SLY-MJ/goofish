@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ItemDao {
+    public ItemDao() {
+    }
 
     public long add(Item item) throws SQLException {
         String sql = "insert into items(seller_id,title,description,price,stock,status,cover_image) values(?,?,?,?,?,?,?)";

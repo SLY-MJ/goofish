@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommentLikeDao {
+    public CommentLikeDao() {
+    }
+
     public long add(CommentLike cl)throws Exception{
         String sql ="insert into comment_likes(comment_id,user_id) values(?,?)";
         try (Connection c = DbUtil.getConnection()) {
