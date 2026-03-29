@@ -4,7 +4,7 @@ public class Favorite {
     public long id;
     public long userId;
     public long itemId;
-    public long createTime;
+    public String createTime;
 
     public Favorite() {
     }
@@ -14,7 +14,7 @@ public class Favorite {
         this.itemId = itemId;
     }
 
-    public Favorite(long id, long userId, long itemId, long createTime) {
+    public Favorite(long id, long userId, long itemId, String createTime) {
         this.id = id;
         this.userId = userId;
         this.itemId = itemId;
@@ -45,11 +45,11 @@ public class Favorite {
         this.itemId = itemId;
     }
 
-    public long getCreateTime() {
+    public String getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(long createTime) {
+    public void setCreateTime(String createTime) {
         this.createTime = createTime;
     }
 }

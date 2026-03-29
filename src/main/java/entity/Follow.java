@@ -4,7 +4,7 @@ public class Follow {
     private long id;
     private long followerId;
     private long followeeId;
-    private long createTime;
+    private String createTime;
 
     public Follow() {
     }
@@ -14,7 +14,7 @@ public class Follow {
         this.followeeId = followeeId;
     }
 
-    public Follow(long id, long followerId, long followeeId, long createTime) {
+    public Follow(long id, long followerId, long followeeId, String createTime) {
         this.id = id;
         this.followerId = followerId;
         this.followeeId = followeeId;
@@ -45,11 +45,11 @@ public class Follow {
         this.followeeId = followeeId;
     }
 
-    public long getCreateTime() {
+    public String getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(long createTime) {
+    public void setCreateTime(String createTime) {
         this.createTime = createTime;
     }
 }
