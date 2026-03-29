@@ -187,4 +187,18 @@ public class UserDao {
             return true;
         }
     }
+
+    public boolean update(User user) throws SQLException {
+        String sql = "update users set username=?,email=?,phone=?,information=? where id=?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setString(1, user.getUsername());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getPhone());
+            ps.setString(4, user.getInformation());
+            ps.setLong(5, user.getId());
+            ps.executeUpdate();
+            return true;
+        }
+    }
 }
