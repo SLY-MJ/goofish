@@ -70,4 +70,20 @@ public class UserService {
         }
         return null;
     }
+
+    public boolean recharge(long userId, double amount) throws Exception {
+        if (userDAO.findById(userId) == null) {
+            throw new Exception("用户不存在");
+        }
+        User user = userDAO.findById(userId);
+        user.setWalletBalance(user.getWalletBalance() + amount);
+        try {
+            userDAO.update(user);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+
 }
