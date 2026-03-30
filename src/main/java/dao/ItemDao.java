@@ -210,4 +210,34 @@ public class ItemDao {
                 rs.getString("updated_at")
         );
     }
+
+    //随机推荐
+    public List<Item> findRandomItem(int limit, Long excludeSellerId) throws SQLException {
+        StringBuilder sql = new StringBuilder(
+                "select * from items " +
+                        "where status=? and is_deleted=0 and stock>0"
+        );
+        if (excludeSellerId != null) {
+            sql.append(" and seller_id<>?");
+        }
+        sql.append(" order by rand() limit ?");
+
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql.toString());
+            int idx = 1;
+            ps.setString(idx++, ItemStatus.ON_SALE.name());
+            if (excludeSellerId != null) {
+                ps.setLong(idx++, excludeSellerId);
+            }
+            ps.setInt(idx, limit);
+
+            ResultSet rs = ps.executeQuery();
+            List<Item> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(getItem(rs));
+            }
+            return list;
+        }
+    }
+
 }
