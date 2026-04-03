@@ -240,4 +240,17 @@ public class ItemDao {
         }
     }
 
+    public List<Item> sortByPrice() throws SQLException {
+        String sql = "select * from items order by price";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            List<Item> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(getItem(rs));
+            }
+            return list;
+        }
+    }
+
 }
