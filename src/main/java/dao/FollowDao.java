@@ -11,12 +11,12 @@ public class FollowDao {
     public FollowDao() {
     }
 
-    public long add(Follow follow) throws SQLException {
-        String sql = "insert into follows(follower_id,followee_id) values(?,?)";
+    public long add(long follower,long followed) throws SQLException {
+        String sql = "insert into follows(follower_id,followed_id) values(?,?)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, follow.getFollowerId());
-            ps.setLong(2, follow.getFolloweeId());
+            ps.setLong(1, follower);
+            ps.setLong(2, followed);
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
@@ -36,8 +36,8 @@ public class FollowDao {
         }
     }
 
-    public boolean deleteByFollowerAndFollowee(long followerId, long followeeId) throws SQLException {
-        String sql = "delete from follows where follower_id=? and followee_id=?";
+    public boolean deleteByFollowerAndFollowed(long followerId, long followeeId) throws SQLException {
+        String sql = "delete from follows where follower_id=? and followed_id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, followerId);
@@ -48,7 +48,7 @@ public class FollowDao {
     }
 
     public boolean exists(long followerId, long followeeId) throws SQLException {
-        String sql = "select 1 from follows where follower_id=? and followee_id=? limit 1";
+        String sql = "select 1 from follows where follower_id=? and followed_id=? limit 1";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, followerId);
@@ -85,11 +85,11 @@ public class FollowDao {
         }
     }
 
-    public List<Follow> findByFolloweeId(long followeeId) throws SQLException {
-        String sql = "select * from follows where followee_id=?";
+    public List<Follow> findByFollowedId(long followedId) throws SQLException {
+        String sql = "select * from follows where followed_id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
-            ps.setLong(1, followeeId);
+            ps.setLong(1, followedId);
             ResultSet rs = ps.executeQuery();
             List<Follow> list = new ArrayList<>();
             while (rs.next()) {
@@ -103,7 +103,7 @@ public class FollowDao {
         return new Follow(
                 rs.getLong("id"),
                 rs.getLong("follower_id"),
-                rs.getLong("followee_id"),
+                rs.getLong("followed_id"),
                 rs.getString("created_at")
         );
     }
