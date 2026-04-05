@@ -3,21 +3,21 @@ package entity;
 public class Follow {
     private long id;
     private long followerId;
-    private long followeeId;
+    private long followedId;
     private String createTime;
 
     public Follow() {
     }
 
-    public Follow(long followerId, long followeeId) {
+    public Follow(long followerId, long followedId) {
         this.followerId = followerId;
-        this.followeeId = followeeId;
+        this.followedId = followedId;
     }
 
     public Follow(long id, long followerId, long followeeId, String createTime) {
         this.id = id;
         this.followerId = followerId;
-        this.followeeId = followeeId;
+        this.followedId = followeeId;
         this.createTime = createTime;
     }
 
@@ -37,12 +37,12 @@ public class Follow {
         this.followerId = followerId;
     }
 
-    public long getFolloweeId() {
-        return followeeId;
+    public long getFollowedId() {
+        return followedId;
     }
 
-    public void setFolloweeId(long followeeId) {
-        this.followeeId = followeeId;
+    public void setFollowedId(long followedId) {
+        this.followedId = followedId;
     }
 
     public String getCreateTime() {
