@@ -2,15 +2,15 @@ package bean;
 
 public class Response<T> {
     private String message;
-    private boolean success;
+    private int code;
     private T data;
 
     public Response() {
     }
 
-    public Response(String message, boolean success, T data) {
+    public Response(String message, int code, T data) {
         this.message = message;
-        this.success = success;
+        this.code = code;
         this.data = data;
     }
 
@@ -21,12 +21,12 @@ public class Response<T> {
     public void setMessage(String message) {
     }
 
-    public boolean getSuccess() {
-        return success;
+    public int getCode() {
+        return code;
     }
 
-    public void setSuccess(boolean success) {
-        this.success = success;
+    public void setCode(int code) {
+        this.code = code;
     }
 
     public T getData() {

@@ -2,6 +2,9 @@ package bean;
 
 import entity.User;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class UserResponse {
     private long id;
     private String username;
@@ -15,6 +18,18 @@ public class UserResponse {
         this.role = user.getRole().toString();
         this.information = user.getInformation();
         this.wallet=user.getWalletBalance();
+    }
+
+    public static UserResponse dto(User user){
+        return new UserResponse(user);
+    }
+
+    public static List<UserResponse> dtoList(List<User> users){
+        List<UserResponse> userResponseList = new ArrayList<>();
+        for (User user : users) {
+            userResponseList.add(dto(user));
+        }
+        return userResponseList;
     }
 
 
