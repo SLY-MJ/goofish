@@ -127,7 +127,7 @@ public class UserController extends HttpServlet {
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         }
-        writeJson(response, new Response<>("获取成功", 200, UserResponse.dtoList(follows)));
+        writeJson(response, new Response<>("获取成功", 200, UserResponse.dto(follows)));
     }
 
     private void getFans(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -143,7 +143,7 @@ public class UserController extends HttpServlet {
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         }
-        writeJson(response, new Response<>("获取粉丝成功", 200, UserResponse.dtoList(fans)));
+        writeJson(response, new Response<>("获取粉丝成功", 200, UserResponse.dto(fans)));
     }
 
 
