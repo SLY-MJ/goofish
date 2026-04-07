@@ -7,7 +7,7 @@ import exception.ServiceException;
 import util.PasswordUtil;
 
 
-public class UserService {
+public class UserService implements UserServiceImp {
     private final UserDao userDAO = new UserDao();
 
     public User register(String username, String password, String role) throws Exception {

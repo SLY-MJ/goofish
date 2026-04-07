@@ -12,7 +12,7 @@ import exception.ServiceException;
 import java.sql.SQLException;
 import java.util.List;
 
-public class ItemService {
+public class ItemService implements ItemServiceImp{
     private final ItemDao itemDAO = new ItemDao();
     private final FavoriteDao favoriteDAO = new FavoriteDao();
     private final ItemImageDao itemImageDAO = new ItemImageDao();
@@ -33,14 +33,22 @@ public class ItemService {
         }
     }
 
-    public boolean delete(long id) throws Exception {
-        if (itemDAO.findById(id) == null) {
-            throw new ServiceException(404, "商品不存在");
+    public void delete(long id) throws ServiceException {
+        try {
+            if (itemDAO.findById(id) == null) {
+                throw new ServiceException(404, "商品不存在");
+            }
+        } catch (SQLException e) {
+            throw new ServiceException(500,e.getMessage());
         }
-        return itemDAO.delete(id);
+        try {
+            itemDAO.delete(id);
+        }catch (SQLException e) {
+            throw new ServiceException(500,e.getMessage());
+        }
     }
 
-    public long edit(long id, String title, String description, double price, int stock, String status, String coverImage) throws ServiceException {
+    public void edit(long id, String title, String description, double price, int stock, String status, String coverImage) throws ServiceException {
         if (id <= 0) {
             throw new ServiceException(401, "传入商品不存在");
         }
@@ -81,7 +89,6 @@ public class ItemService {
         } catch (SQLException e) {
             throw new ServiceException(500,e.getMessage());
         }
-        return id;
     }
 
     public Item findById(long id) throws Exception {
@@ -130,54 +137,6 @@ public class ItemService {
             items = itemDAO.findRandomItem(limit, userId);
         } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
-        }
-        return items;
-    }
-
-    public void addFavorite(long userId,long itemId) throws ServiceException {
-        if (userId <= 0||itemId <= 0) {
-            throw new ServiceException(401, "传入用户或商品不存在");
-        }
-        try{
-            favoriteDAO.add(userId,itemId);
-        }catch (Exception e){
-            throw new ServiceException(500, e.getMessage());
-        }
-    }
-
-    public void removeFavorite(long userId,long itemId) throws ServiceException {
-        if (userId <= 0||itemId <= 0) {
-            throw new ServiceException(401, "传入用户或商品不存在");
-        }
-        try{
-            favoriteDAO.delete(userId,itemId);
-        }catch (Exception e){
-            throw new ServiceException(500, e.getMessage());
-        }
-    }
-
-    public List<Item>getMyFavorite(long userId) throws ServiceException {
-        if(userId <= 0){
-            throw new ServiceException(401, "传入用户不存在");
-        }
-        List<Favorite> list;
-        try{
-            list=favoriteDAO.getByUserId(userId);
-        }catch (Exception e){
-            throw new ServiceException(500, e.getMessage());
-        }
-        if (list == null || list.isEmpty()) {
-            throw new ServiceException(404, "没有收藏的商品");
-        }
-        List<Item> items = null;
-        for(Favorite favorite : list){
-            Item item;
-            try {
-                item=itemDAO.findById(favorite.getItemId());
-            } catch (SQLException e) {
-                throw new ServiceException(500,e.getMessage());
-            }
-            items.add(item);
         }
         return items;
     }

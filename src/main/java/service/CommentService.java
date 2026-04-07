@@ -7,7 +7,7 @@ import exception.ServiceException;
 import java.sql.SQLException;
 import java.util.List;
 
-public class CommentService {
+public class CommentService implements CommentServiceImp {
     private final CommentDao commentDAO = new CommentDao();
 
     public long add(long itemId, long userId, String content) throws ServiceException {
