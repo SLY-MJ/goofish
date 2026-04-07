@@ -1,8 +1,10 @@
 package service;
 
+import dao.FavoriteDao;
 import dao.ItemDao;
 import dao.ItemImageDao;
 import dao.ItemTagDao;
+import entity.Favorite;
 import entity.Item;
 import enums.ItemStatus;
 import exception.ServiceException;
@@ -12,6 +14,7 @@ import java.util.List;
 
 public class ItemService {
     private final ItemDao itemDAO = new ItemDao();
+    private final FavoriteDao favoriteDAO = new FavoriteDao();
     private final ItemImageDao itemImageDAO = new ItemImageDao();
     private final ItemTagDao itemTagDAO = new ItemTagDao();
 
@@ -41,38 +44,42 @@ public class ItemService {
         if (id <= 0) {
             throw new ServiceException(401, "传入商品不存在");
         }
-        if (itemDAO.findById(id) == null) {
-            throw new ServiceException(404, "商品不存在");
-        }
-        if (title != null && !title.isEmpty()) {
-            if (!itemDAO.updateTitle(id, title)) {
-                throw new ServiceException(500, "更新商品标题失败");
+        try {
+            if (itemDAO.findById(id) == null) {
+                throw new ServiceException(404, "商品不存在");
             }
-        }
-        if (description != null && !description.isEmpty()) {
-            if (!itemDAO.updateDescription(id, description)) {
-                throw new ServiceException(500, "更新商品描述失败");
+            if (title != null && !title.isEmpty()) {
+                if (!itemDAO.updateTitle(id, title)) {
+                    throw new ServiceException(500, "更新商品标题失败");
+                }
             }
-        }
-        if (price > 0) {
-            if (!itemDAO.updatePrice(id, price)) {
-                throw new ServiceException(500, "更新商品价格失败");
+            if (description != null && !description.isEmpty()) {
+                if (!itemDAO.updateDescription(id, description)) {
+                    throw new ServiceException(500, "更新商品描述失败");
+                }
             }
-        }
-        if (stock > 0) {
-            if (!itemDAO.updateStock(id, stock)) {
-                throw new ServiceException(500, "更新商品库存失败");
+            if (price > 0) {
+                if (!itemDAO.updatePrice(id, price)) {
+                    throw new ServiceException(500, "更新商品价格失败");
+                }
             }
-        }
-        if (status != null && !status.isEmpty()) {
-            if (!itemDAO.updateStatus(id, ItemStatus.valueOf(status))) {
-                throw new ServiceException(500, "更新商品状态失败");
+            if (stock > 0) {
+                if (!itemDAO.updateStock(id, stock)) {
+                    throw new ServiceException(500, "更新商品库存失败");
+                }
             }
-        }
-        if (coverImage!= null && !coverImage.isEmpty()) {
-            if (!itemDAO.updateCoverImage(id, coverImage)) {
-                throw new ServiceException(500, "更新商品封面失败");
+            if (status != null && !status.isEmpty()) {
+                if (!itemDAO.updateStatus(id, ItemStatus.valueOf(status))) {
+                    throw new ServiceException(500, "更新商品状态失败");
+                }
             }
+            if (coverImage!= null && !coverImage.isEmpty()) {
+                if (!itemDAO.updateCoverImage(id, coverImage)) {
+                    throw new ServiceException(500, "更新商品封面失败");
+                }
+            }
+        } catch (SQLException e) {
+            throw new ServiceException(500,e.getMessage());
         }
         return id;
     }
@@ -104,9 +111,15 @@ public class ItemService {
 
     public List<Item> search(String keyword) throws ServiceException {
         if (keyword == null || keyword.isEmpty()) {
-            throw new Exception("搜索关键词不能为空");
+            throw new ServiceException(401,"搜索关键词不能为空");
         }
-        return itemDAO.findByTitle(keyword);
+        List<Item> list;
+        try {
+            list = itemDAO.findByTitle(keyword);
+        } catch (Exception e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+        return list;
     }
 
     public List<Item> recommend(long userId) throws ServiceException {
@@ -117,6 +130,54 @@ public class ItemService {
             items = itemDAO.findRandomItem(limit, userId);
         } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
+        }
+        return items;
+    }
+
+    public void addFavorite(long userId,long itemId) throws ServiceException {
+        if (userId <= 0||itemId <= 0) {
+            throw new ServiceException(401, "传入用户或商品不存在");
+        }
+        try{
+            favoriteDAO.add(userId,itemId);
+        }catch (Exception e){
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    public void removeFavorite(long userId,long itemId) throws ServiceException {
+        if (userId <= 0||itemId <= 0) {
+            throw new ServiceException(401, "传入用户或商品不存在");
+        }
+        try{
+            favoriteDAO.delete(userId,itemId);
+        }catch (Exception e){
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    public List<Item>getMyFavorite(long userId) throws ServiceException {
+        if(userId <= 0){
+            throw new ServiceException(401, "传入用户不存在");
+        }
+        List<Favorite> list;
+        try{
+            list=favoriteDAO.getByUserId(userId);
+        }catch (Exception e){
+            throw new ServiceException(500, e.getMessage());
+        }
+        if (list == null || list.isEmpty()) {
+            throw new ServiceException(404, "没有收藏的商品");
+        }
+        List<Item> items = null;
+        for(Favorite favorite : list){
+            Item item;
+            try {
+                item=itemDAO.findById(favorite.getItemId());
+            } catch (SQLException e) {
+                throw new ServiceException(500,e.getMessage());
+            }
+            items.add(item);
         }
         return items;
     }
