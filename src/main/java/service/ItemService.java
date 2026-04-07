@@ -5,6 +5,7 @@ import dao.ItemImageDao;
 import dao.ItemTagDao;
 import entity.Item;
 import enums.ItemStatus;
+import exception.ServiceException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -14,37 +15,66 @@ public class ItemService {
     private final ItemImageDao itemImageDAO = new ItemImageDao();
     private final ItemTagDao itemTagDAO = new ItemTagDao();
 
-    public Item add(Item item) throws Exception {
-        if (item == null) {
-            throw new Exception("商品不存在");
+    public long add(long id, String title, String description, double price, String coverImage) throws ServiceException {
+        Item item = new Item(id, title, description, price, 1, coverImage);
+        long itemID;
+        try {
+            itemID = itemDAO.add(item);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
         }
-        long id = itemDAO.add(item);
-        if (id > 0) {
-            return itemDAO.findById(id);
+        if (itemID > 0) {
+            return itemID;
         } else {
-            throw new Exception("添加商品失败");
+            throw new ServiceException(500, "添加商品失败");
         }
     }
 
     public boolean delete(long id) throws Exception {
         if (itemDAO.findById(id) == null) {
-            throw new Exception("商品不存在");
+            throw new ServiceException(404, "商品不存在");
         }
         return itemDAO.delete(id);
     }
 
-    public Item edit(Item item) throws Exception {
-        if (item == null) {
-            throw new Exception("商品不存在");
+    public long edit(long id, String title, String description, double price, int stock, String status, String coverImage) throws ServiceException {
+        if (id <= 0) {
+            throw new ServiceException(401, "传入商品不存在");
         }
-        if (itemDAO.findById(item.getId()) == null) {
-            throw new Exception("商品不存在");
+        if (itemDAO.findById(id) == null) {
+            throw new ServiceException(404, "商品不存在");
         }
-        if (itemDAO.update(item)) {
-            return itemDAO.findById(item.getId());
-        } else {
-            throw new Exception("更新商品失败");
+        if (title != null && !title.isEmpty()) {
+            if (!itemDAO.updateTitle(id, title)) {
+                throw new ServiceException(500, "更新商品标题失败");
+            }
         }
+        if (description != null && !description.isEmpty()) {
+            if (!itemDAO.updateDescription(id, description)) {
+                throw new ServiceException(500, "更新商品描述失败");
+            }
+        }
+        if (price > 0) {
+            if (!itemDAO.updatePrice(id, price)) {
+                throw new ServiceException(500, "更新商品价格失败");
+            }
+        }
+        if (stock > 0) {
+            if (!itemDAO.updateStock(id, stock)) {
+                throw new ServiceException(500, "更新商品库存失败");
+            }
+        }
+        if (status != null && !status.isEmpty()) {
+            if (!itemDAO.updateStatus(id, ItemStatus.valueOf(status))) {
+                throw new ServiceException(500, "更新商品状态失败");
+            }
+        }
+        if (coverImage!= null && !coverImage.isEmpty()) {
+            if (!itemDAO.updateCoverImage(id, coverImage)) {
+                throw new ServiceException(500, "更新商品封面失败");
+            }
+        }
+        return id;
     }
 
     public Item findById(long id) throws Exception {
@@ -55,32 +85,39 @@ public class ItemService {
         return item;
     }
 
-    public List<Item> findBySeller(long sellerId) throws Exception {
-        return itemDAO.findBySellerId(sellerId);
-    }
-
-    public List<Item> search(String keyword) throws Exception {
-        if (keyword == null || keyword.isEmpty()) {
-            throw new Exception("搜索关键词不能为空");
-        }
-        return itemDAO.findByTitle(keyword);
-    }
-
-    public List<Item> recommend(long userId) throws Exception {
-        int limit = 10;
-
-        List<Item> items = null;
+    public List<Item> findBySeller(long sellerId) throws ServiceException {
+        List<Item> list;
         try {
-            items = itemDAO.findRandomItem(limit, userId);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            list = itemDAO.findBySellerId(sellerId);
+        } catch (Exception e) {
+            throw new ServiceException(500, e.getMessage());
         }
-        return items;
+        if (list == null) {
+            throw new ServiceException(404, "该卖家没有商品");
+        }
+        return list;
     }
 
     public List<Item> findByStatus(ItemStatus status) throws Exception {
         return itemDAO.findByStatus(status);
     }
 
+    public List<Item> search(String keyword) throws ServiceException {
+        if (keyword == null || keyword.isEmpty()) {
+            throw new Exception("搜索关键词不能为空");
+        }
+        return itemDAO.findByTitle(keyword);
+    }
 
+    public List<Item> recommend(long userId) throws ServiceException {
+        int limit = 10;
+
+        List<Item> items = null;
+        try {
+            items = itemDAO.findRandomItem(limit, userId);
+        } catch (Exception e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+        return items;
+    }
 }
