@@ -11,13 +11,13 @@ public class CommentDao {
     public CommentDao() {
     }
 
-    public long add(Comment  comment) throws SQLException{
+    public long add(long itemId,long userId,String comment) throws SQLException{
         String sql = "insert into comments(item_id,user_id,comment) values(?,?,?)";
         try (Connection c= DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, comment.getItemId());
-            ps.setLong(2, comment.getUserId());
-            ps.setString(3, comment.getComment());
+            ps.setLong(1, itemId);
+            ps.setLong(2, userId);
+            ps.setString(3, comment);
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {

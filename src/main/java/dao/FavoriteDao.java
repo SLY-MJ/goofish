@@ -13,7 +13,7 @@ public class FavoriteDao {
     public FavoriteDao() {
     }
 
-    public long add(long userId,long itemId) throws Exception {
+    public long add(long userId, long itemId) throws Exception {
         String sql = "insert into favorites(user_id,item_id) values(?,?)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
@@ -28,11 +28,12 @@ public class FavoriteDao {
         }
     }
 
-    public boolean delete(long itemId) throws Exception {
-        String sql = "delete from favorites where id=?";
+    public boolean delete(long userId, long itemId) throws Exception {
+        String sql = "delete from favorites where user_id=?and item_id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
-            ps.setLong(1, itemId);
+            ps.setLong(1, userId);
+            ps.setLong(2, itemId);
             ps.executeUpdate();
             return true;
         }
@@ -40,10 +41,10 @@ public class FavoriteDao {
 
     private Favorite getFavorite(ResultSet rs) throws Exception {
         return new Favorite(
-            rs.getLong("id"),
-            rs.getLong("user_id"),
-            rs.getLong("item_id"),
-            rs.getString("created_at")
+                rs.getLong("id"),
+                rs.getLong("user_id"),
+                rs.getLong("item_id"),
+                rs.getString("created_at")
         );
     }
 
@@ -54,7 +55,7 @@ public class FavoriteDao {
             ps.setLong(1, userId);
             ResultSet rs = ps.executeQuery();
             List<Favorite> favorites = new ArrayList<>();
-            while(rs.next()) {
+            while (rs.next()) {
                 favorites.add(getFavorite(rs));
             }
             return favorites;
@@ -68,22 +69,10 @@ public class FavoriteDao {
             ps.setLong(1, itemId);
             ResultSet rs = ps.executeQuery();
             List<Favorite> favorites = new ArrayList<>();
-            while(rs.next()) {
+            while (rs.next()) {
                 favorites.add(getFavorite(rs));
             }
             return favorites;
-        }
-    }
-
-    public boolean update(Favorite favorite) throws Exception {
-        String sql = "update favorites set user_id=?,item_id=? where id=?";
-        try (Connection c = DbUtil.getConnection()) {
-            PreparedStatement ps = c.prepareStatement(sql);
-            ps.setLong(1, favorite.getUserId());
-            ps.setLong(2, favorite.getItemId());
-            ps.setLong(3, favorite.getId());
-            ps.executeUpdate();
-            return true;
         }
     }
 }
