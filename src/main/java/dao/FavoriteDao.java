@@ -13,12 +13,12 @@ public class FavoriteDao {
     public FavoriteDao() {
     }
 
-    public long add(Favorite favorite) throws Exception {
+    public long add(long userId,long itemId) throws Exception {
         String sql = "insert into favorites(user_id,item_id) values(?,?)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, favorite.getUserId());
-            ps.setLong(2, favorite.getItemId());
+            ps.setLong(1, userId);
+            ps.setLong(2, itemId);
             ps.executeUpdate();
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -28,11 +28,11 @@ public class FavoriteDao {
         }
     }
 
-    public boolean delete(Favorite favorite) throws Exception {
+    public boolean delete(long itemId) throws Exception {
         String sql = "delete from favorites where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
-            ps.setLong(1, favorite.getId());
+            ps.setLong(1, itemId);
             ps.executeUpdate();
             return true;
         }
