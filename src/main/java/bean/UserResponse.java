@@ -21,10 +21,12 @@ public class UserResponse {
     }
 
     public static UserResponse dto(User user){
+        if(user == null) return null;
         return new UserResponse(user);
     }
 
     public static List<UserResponse> dtoList(List<User> users){
+        if(users == null) return null;
         List<UserResponse> userResponseList = new ArrayList<>();
         for (User user : users) {
             userResponseList.add(dto(user));
