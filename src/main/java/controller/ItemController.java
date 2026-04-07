@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import entity.Comment;
 import entity.Item;
 import service.CommentService;
+import service.FavoriteService;
 import service.ItemService;
 import exception.ServiceException;
 
@@ -20,6 +21,7 @@ import java.util.List;
 @WebServlet("/items/*")
 public class ItemController extends HttpServlet {
     private final ItemService itemService = new ItemService();
+    private final FavoriteService favoriteService = new FavoriteService();
     private final CommentService commentService = new CommentService();
     private final Gson gson = new Gson();
 
@@ -80,6 +82,12 @@ public class ItemController extends HttpServlet {
                     break;
                 case "/unfavorite":
                     unfavorite(request, response);
+                    break;
+                case "/addComment":
+                    addComment(request,response);
+                    break;
+                case "/deleteComment":
+                    deleteComment(request,response);
                     break;
             }
         } catch (Exception e) {
@@ -157,7 +165,7 @@ public class ItemController extends HttpServlet {
         long userId = (long) session.getAttribute("id");
         List<Item> items = null;
         try{
-            items=itemService.getMyFavorite(userId);
+            items=favoriteService.getMyFavorite(userId);
         }catch (ServiceException e){
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         }
@@ -228,7 +236,7 @@ public class ItemController extends HttpServlet {
         long userId = (long) session.getAttribute("id");
         long itemId = Long.parseLong(request.getParameter("id"));
         try {
-            itemService.addFavorite(userId, itemId);
+            favoriteService.add(userId, itemId);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         }
@@ -243,11 +251,42 @@ public class ItemController extends HttpServlet {
         long userId = (long) session.getAttribute("id");
         long itemId = Long.parseLong(request.getParameter("id"));
         try {
-            itemService.removeFavorite(userId, itemId);
+            favoriteService.remove(userId, itemId);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         }
         writeJson(response, new Response<>("取消收藏商品成功", 200, null));
+    }
+
+    private void  addComment(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession();
+        if (session == null) {
+            writeJson(response, new Response<>("未登录", 401, null));
+        }
+        long userId = (long) session.getAttribute("id");
+        long itemId = Long.parseLong(request.getParameter("id"));
+        String content = request.getParameter("content");
+        try{
+            commentService.add(itemId,userId,content);
+        }catch (ServiceException e){
+            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+        }
+        writeJson(response, new Response<>("添加评论成功", 200, null));
+    }
+
+    private void deleteComment(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession();
+        if (session == null) {
+            writeJson(response, new Response<>("未登录", 401, null));
+            return;
+        }
+        long id=Long.parseLong(request.getParameter("id"));
+        try{
+            commentService.delete(id);
+        }catch (ServiceException e){
+            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+        }
+        writeJson(response, new Response<>("删除评论成功", 200, null));
     }
 
     //==========================
