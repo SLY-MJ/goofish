@@ -57,7 +57,7 @@ public class UserController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // 所有写操作 POST 进来
         request.setCharacterEncoding("UTF-8");
-        String path = request.getServletPath();
+        String path = request.getPathInfo();
         if (path == null || path.equals("/")) {
             writeJson(response, new Response<>("无法识别path", 404, null));
             return;
@@ -240,18 +240,6 @@ public class UserController extends HttpServlet {
         writeJson(response, new Response<UserResponse>("充值成功", 200, new UserResponse(user)));
     }
 
-
-    private void writeJson(HttpServletResponse response, Object body) throws IOException {
-        try {
-            response.setContentType("application/json;charset=UTF-8");
-            String json = gson.toJson(body);
-            response.getWriter().write(json);
-        } catch (IOException e) {
-            e.printStackTrace();
-            response.setStatus(500);//返回前端状态码
-        }
-    }
-
     private void follow(HttpServletRequest request, HttpServletResponse response) throws Exception {
         HttpSession session = request.getSession(false);
         if (session == null) {
@@ -282,5 +270,17 @@ public class UserController extends HttpServlet {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         }
         writeJson(response,new Response<>("取关成功", 200, null));
+    }
+
+    //=========私有工具========
+    private void writeJson(HttpServletResponse response, Object body) throws IOException {
+        try {
+            response.setContentType("application/json;charset=UTF-8");
+            String json = gson.toJson(body);
+            response.getWriter().write(json);
+        } catch (IOException e) {
+            e.printStackTrace();
+            response.setStatus(500);//返回前端状态码
+        }
     }
 }
