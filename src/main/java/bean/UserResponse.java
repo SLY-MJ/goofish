@@ -25,7 +25,7 @@ public class UserResponse {
         return new UserResponse(user);
     }
 
-    public static List<UserResponse> dtoList(List<User> users){
+    public static List<UserResponse> dto(List<User> users){
         if(users == null) return null;
         List<UserResponse> userResponseList = new ArrayList<>();
         for (User user : users) {

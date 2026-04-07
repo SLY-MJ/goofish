@@ -22,7 +22,7 @@ public class ItemResponse {
                 item.getCoverImage(), item.getPrice(), item.getStatus());
     }
 
-    public static List<ItemResponse> dtoList(List<Item> items) {
+    public static List<ItemResponse> dto(List<Item> items) {
         if (items == null) {
             return null;
         }
