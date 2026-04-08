@@ -12,16 +12,15 @@ public class OrderDao {
     public OrderDao() {
     }
 
-    public long add(Order order) throws SQLException {
-        String sql = "insert into orders(order_no,item_id,buyer_id,seller_id,amount,status) values(?,?,?,?,?,?)";
+    public long add(long itemId,long buyerId,long sellerId,double amount ,OrderStatus status) throws SQLException {
+        String sql = "insert into orders(item_id,buyer_id,seller_id,amount,status) values(?,?,?,?,?)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, order.getOrderNo());
-            ps.setLong(2, order.getItemId());
-            ps.setLong(3, order.getBuyerId());
-            ps.setLong(4, order.getSellerId());
-            ps.setInt(5, order.getAmount());
-            ps.setString(6, order.getStatus().name());
+            ps.setLong(1, itemId);
+            ps.setLong(2, buyerId);
+            ps.setLong(3, sellerId);
+            ps.setDouble(4, amount);
+            ps.setString(5, status.name());
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
@@ -47,19 +46,6 @@ public class OrderDao {
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return getOrder(rs);
-            }
-        }
-        return null;
-    }
-
-    public Order findByOrderNo(String orderNo) throws SQLException {
-        String sql = "select * from orders where order_no=?";
-        try (Connection c = DbUtil.getConnection()) {
-            PreparedStatement ps = c.prepareStatement(sql);
-            ps.setString(1, orderNo);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return getOrder(rs);
@@ -141,11 +127,10 @@ public class OrderDao {
     private Order getOrder(ResultSet rs) throws SQLException {
         return new Order(
                 rs.getLong("id"),
-                rs.getString("order_no"),
                 rs.getLong("item_id"),
                 rs.getLong("buyer_id"),
                 rs.getLong("seller_id"),
-                rs.getInt("amount"),
+                rs.getDouble("amount"),
                 OrderStatus.valueOf(rs.getString("status")),
                 rs.getString("created_at")
         );

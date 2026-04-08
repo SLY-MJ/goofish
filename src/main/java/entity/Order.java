@@ -4,19 +4,17 @@ import enums.OrderStatus;
 
 public class Order {
     private long id;
-    private String orderNo;
     private long itemId;
     private long buyerId;
     private long sellerId;
-    private int amount;
+    private double amount;
     private OrderStatus status;//"CREATED,'PAID''CANCELLED''REFUNDED'
     private String createTime;
 
     public Order() {
     }
 
-    public Order(String orderNo, long itemId, long buyerId, long sellerId, int amount, OrderStatus status) {
-        this.orderNo = orderNo;
+    public Order(long itemId, long buyerId, long sellerId, int amount, OrderStatus status) {
         this.itemId = itemId;
         this.buyerId = buyerId;
         this.sellerId = sellerId;
@@ -24,9 +22,8 @@ public class Order {
         this.status = status;
     }
 
-    public Order(long id, String orderNo, long itemId, long buyerId, long sellerId, int amount, OrderStatus status, String createTime) {
+    public Order(long id,  long itemId, long buyerId, long sellerId, double amount, OrderStatus status, String createTime) {
         this.id = id;
-        this.orderNo = orderNo;
         this.itemId = itemId;
         this.buyerId = buyerId;
         this.sellerId = sellerId;
@@ -41,14 +38,6 @@ public class Order {
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    public String getOrderNo() {
-        return orderNo;
-    }
-
-    public void setOrderNo(String orderNo) {
-        this.orderNo = orderNo;
     }
 
     public long getItemId() {
@@ -75,11 +64,11 @@ public class Order {
         this.sellerId = sellerId;
     }
 
-    public int getAmount() {
+    public double getAmount() {
         return amount;
     }
 
-    public void setAmount(int amount) {
+    public void setAmount(double amount) {
         this.amount = amount;
     }
 

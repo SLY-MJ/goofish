@@ -11,11 +11,11 @@ public class TagDao {
     public TagDao() {
     }
 
-    public long add(Tag tag) throws SQLException {
+    public long add(String name) throws SQLException {
         String sql = "insert into tags(name) values(?)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, tag.getName());
+            ps.setString(1, name);
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();

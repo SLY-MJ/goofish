@@ -25,7 +25,7 @@ public class FollowService {
         return id;
     }
 
-    public boolean delete(long followerId, long followedId) throws Exception {
+    public boolean delete(long followerId, long followedId) throws ServiceException {
         if(followerId<0 || followedId<0){
             throw new ServiceException(401,"ID格式不对");
         }
@@ -37,7 +37,7 @@ public class FollowService {
         }
     }
 
-    public List<User> getFollows(long followedId) throws Exception {
+    public List<User> getFollows(long followedId) throws ServiceException {
         List<Follow> follows;
         if(followedId<0){
             throw new ServiceException(401,"ID格式不对");
@@ -64,7 +64,7 @@ public class FollowService {
         return users;
     }
 
-    public List<User> getFans(long followerId) throws Exception {
+    public List<User> getFans(long followerId) throws ServiceException {
         List<Follow> followed;
         if(followerId<0){
             throw new ServiceException(401,"ID格式不对");

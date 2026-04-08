@@ -1,19 +1,21 @@
 package service;
 
 import entity.User;
+import exception.ServiceException;
 
 public interface UserServiceImp {
-    User register(String username, String password, String role) throws Exception;
+    User register(String username, String password, String role) throws ServiceException;
 
-    User login(String username, String password) throws Exception;
+    User login(String username, String password) throws ServiceException;
 
-    boolean deleteUser(long id) throws Exception;
+    void deleteUser(long id) throws ServiceException;
 
-    User changePassword(long userId, String oldPassword, String newPassword) throws Exception;
+    User changePassword(long userId, String oldPassword, String newPassword) throws ServiceException;
 
-    User recharge(long userId, double amount) throws Exception;
+    User recharge(long userId, double amount) throws ServiceException;
 
-    User getUserById(long id) throws Exception;
+    User getUserById(long id) throws ServiceException;
 
-    User update(long id, String username, String email, String phone, String info) throws Exception;
+    User update(long id, String username, String email, String phone, String info) throws ServiceException;
+
 }

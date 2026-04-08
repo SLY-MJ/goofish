@@ -11,12 +11,12 @@ public class ItemTagDao {
     public ItemTagDao() {
     }
 
-    public long add(ItemTag itemTag) throws SQLException {
+    public long add(long itemId,long tagId) throws SQLException {
         String sql = "insert into item_tags(item_id,tag_id) values(?,?)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, itemTag.getItemId());
-            ps.setLong(2, itemTag.getTagId());
+            ps.setLong(1, itemId);
+            ps.setLong(2, tagId);
             ps.executeUpdate();
 
             ResultSet rs = ps.getGeneratedKeys();
