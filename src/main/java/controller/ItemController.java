@@ -10,6 +10,7 @@ import service.CommentService;
 import service.FavoriteService;
 import service.ItemService;
 import exception.ServiceException;
+import util.JsonUtil;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -19,14 +20,14 @@ import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @WebServlet("/items/*")
-public class ItemController extends HttpServlet {
+public class ItemController extends HttpServlet implements JsonUtil {
     private final ItemService itemService = new ItemService();
     private final FavoriteService favoriteService = new FavoriteService();
     private final CommentService commentService = new CommentService();
     private final Gson gson = new Gson();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response){
         String path = request.getPathInfo();
         if (path == null || path.equals("/")) {
             writeJson(response, new Response<>("无法识别标签", 404, null));
@@ -289,16 +290,4 @@ public class ItemController extends HttpServlet {
         writeJson(response, new Response<>("删除评论成功", 200, null));
     }
 
-    //==========================
-    private void writeJson(HttpServletResponse response, Object data) {
-        try {
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            String json = gson.toJson(data);
-            response.getWriter().write(json);
-        } catch (Exception e) {
-            response.setStatus(500);
-            e.printStackTrace();
-        }
-    }
 }

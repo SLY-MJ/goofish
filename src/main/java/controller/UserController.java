@@ -7,6 +7,7 @@ import entity.User;
 import service.FollowService;
 import service.UserService;
 import exception.ServiceException;
+import util.JsonUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -19,15 +20,15 @@ import java.util.List;
 
 
 @WebServlet("/user/*")
-public class UserController extends HttpServlet {
+public class UserController extends HttpServlet implements JsonUtil {
     private final UserService userService = new UserService();
     private final FollowService followService = new FollowService();
     private final Gson gson = new Gson();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         // 如果你有“获取当前登录用户信息”等接口，可以放在这里
-        String path = request.getServletPath();
+        String path = request.getPathInfo();
         if (path == null || path.equals("/")) {
             writeJson(response, new Response<>("无法识别path", 404, null));
             return;
@@ -54,7 +55,7 @@ public class UserController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // 所有写操作 POST 进来
         request.setCharacterEncoding("UTF-8");
         String path = request.getPathInfo();
@@ -111,10 +112,10 @@ public class UserController extends HttpServlet {
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         }
-        writeJson(response, new Response<UserResponse>("获取用户信息成功", 200, new UserResponse(user)));
+        writeJson(response, new Response<>("获取用户信息成功", 200, new UserResponse(user)));
     }
 
-    private void getFollows(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void getFollows(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
@@ -130,7 +131,7 @@ public class UserController extends HttpServlet {
         writeJson(response, new Response<>("获取成功", 200, UserResponse.dto(follows)));
     }
 
-    private void getFans(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void getFans(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
@@ -148,7 +149,7 @@ public class UserController extends HttpServlet {
 
 
     //================POST函数================
-    private void register(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void register(HttpServletRequest request, HttpServletResponse response) {
         //从request中获取参数
         String username = request.getParameter("username");
         String password = request.getParameter("password");
@@ -161,11 +162,11 @@ public class UserController extends HttpServlet {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));//接收丢出的异常
             return;
         }
-        writeJson(response, new Response<UserResponse>("注册成功", 200, new UserResponse(user)));
+        writeJson(response, new Response<>("注册成功", 200, new UserResponse(user)));
         request.getSession().setAttribute("id", user.getId());
     }
 
-    private void login(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void login(HttpServletRequest request, HttpServletResponse response) {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
         User user;
@@ -175,16 +176,16 @@ public class UserController extends HttpServlet {
             writeJson(response, new Response<UserResponse>(e.getMessage(), e.getCode(), null));
             return;
         }
-        writeJson(response, new Response<UserResponse>("登录成功", 200, new UserResponse(user)));
+        writeJson(response, new Response<>("登录成功", 200, new UserResponse(user)));
         request.getSession().setAttribute("id", user.getId());
     }
 
-    private void logout(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void logout(HttpServletRequest request, HttpServletResponse response) {
         request.getSession().invalidate();
         writeJson(response, new Response<>("退出登录成功", 200, null));
     }
 
-    private void update(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void update(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
@@ -205,7 +206,7 @@ public class UserController extends HttpServlet {
         writeJson(response, new Response<>("更新成功", 200, new UserResponse(user)));
     }
 
-    private void changePassword(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void changePassword(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
@@ -223,7 +224,7 @@ public class UserController extends HttpServlet {
         writeJson(response, new Response<>("更改成功", 200, new UserResponse(user)));
     }
 
-    private void recharge(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void recharge(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
@@ -237,10 +238,10 @@ public class UserController extends HttpServlet {
         } catch (ServiceException e) {
             writeJson(response, new Response<UserResponse>(e.getMessage(), e.getCode(), null));
         }
-        writeJson(response, new Response<UserResponse>("充值成功", 200, new UserResponse(user)));
+        writeJson(response, new Response<>("充值成功", 200, new UserResponse(user)));
     }
 
-    private void follow(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void follow(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
@@ -257,10 +258,10 @@ public class UserController extends HttpServlet {
         writeJson(response, new Response<>("关注成功", 200, null));
     }
 
-    private void unfollow(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    private void unfollow(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);
         if (session == null) {
-            writeJson(response,new Response<>("未登录", 401, null));
+            writeJson(response, new Response<>("未登录", 401, null));
         }
         long followerId = (long) session.getAttribute("id");
         long followedId = Long.parseLong(request.getParameter("followedId"));
@@ -269,18 +270,6 @@ public class UserController extends HttpServlet {
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         }
-        writeJson(response,new Response<>("取关成功", 200, null));
-    }
-
-    //=========私有工具========
-    private void writeJson(HttpServletResponse response, Object body) throws IOException {
-        try {
-            response.setContentType("application/json;charset=UTF-8");
-            String json = gson.toJson(body);
-            response.getWriter().write(json);
-        } catch (IOException e) {
-            e.printStackTrace();
-            response.setStatus(500);//返回前端状态码
-        }
+        writeJson(response, new Response<>("取关成功", 200, null));
     }
 }
