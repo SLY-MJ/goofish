@@ -24,10 +24,13 @@ public class CommentService implements CommentServiceImp {
         }
     }
 
-    public boolean delete(long id) throws ServiceException {
+    public boolean delete(long userId,long id) throws ServiceException {
         try {
             if (commentDAO.findById(id) == null) {
                 throw new ServiceException(404, "评论不存在");
+            }
+            if (commentDAO.findById(id).getUserId() != userId) {
+                throw new ServiceException(403, "无权删除他人评论");
             }
             return commentDAO.delete(id);
         } catch (SQLException e) {

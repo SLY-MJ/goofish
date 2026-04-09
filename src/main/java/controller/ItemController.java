@@ -62,7 +62,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        String path = request.getServletPath();
+        String path = request.getPathInfo();
         if (path == null || path.equals("/")) {
             writeJson(response, new Response<>("无法识别标签", 404, null));
             return;
@@ -220,9 +220,15 @@ public class ItemController extends HttpServlet implements JsonUtil {
     }
 
     private void delete(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession();
+        if (session == null) {
+            writeJson(response, new Response<>("请先登录", 401, null));
+            return;
+        }
+        long userId = (long) session.getAttribute("id");
         long id = Long.parseLong(request.getParameter("id"));
         try {
-            itemService.delete(id);
+            itemService.delete(userId,id);
         } catch (Exception e) {
             writeJson(response, new Response<>(e.getMessage(), 401, null));
         }
@@ -233,6 +239,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
         HttpSession session = request.getSession();
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
+            return;
         }
         long userId = (long) session.getAttribute("id");
         long itemId = Long.parseLong(request.getParameter("id"));
@@ -248,6 +255,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
         HttpSession session = request.getSession();
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
+            return;
         }
         long userId = (long) session.getAttribute("id");
         long itemId = Long.parseLong(request.getParameter("id"));
@@ -263,6 +271,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
         HttpSession session = request.getSession();
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
+            return;
         }
         long userId = (long) session.getAttribute("id");
         long itemId = Long.parseLong(request.getParameter("id"));
@@ -281,9 +290,10 @@ public class ItemController extends HttpServlet implements JsonUtil {
             writeJson(response, new Response<>("未登录", 401, null));
             return;
         }
+        long userId = (long) session.getAttribute("id");
         long id=Long.parseLong(request.getParameter("id"));
         try{
-            commentService.delete(id);
+            commentService.delete(userId,id);
         }catch (ServiceException e){
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         }

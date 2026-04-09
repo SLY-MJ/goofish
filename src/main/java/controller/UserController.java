@@ -23,7 +23,6 @@ import java.util.List;
 public class UserController extends HttpServlet implements JsonUtil {
     private final UserService userService = new UserService();
     private final FollowService followService = new FollowService();
-    private final Gson gson = new Gson();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
@@ -47,6 +46,7 @@ public class UserController extends HttpServlet implements JsonUtil {
                     break;
                 case "/search":
                     search(request,response);
+                    break;
                 default:
                     writeJson(response, new Response<>("不支持的 GET 操作: " + path, 404, null));
             }
@@ -91,6 +91,7 @@ public class UserController extends HttpServlet implements JsonUtil {
                     break;
                 case "/unfollow":
                     unfollow(request, response);
+                    break;
                 default:
                     writeJson(response, new Response<>("不支持的 POST 操作: " + path, 404, null));
             }
@@ -165,11 +166,9 @@ public class UserController extends HttpServlet implements JsonUtil {
         //从request中获取参数
         String username = request.getParameter("username");
         String password = request.getParameter("password");
-        String role = request.getParameter("role");
-
         User user;
         try {
-            user = userService.register(username, password, role);
+            user = userService.register(username, password);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));//接收丢出的异常
             return;
@@ -274,6 +273,7 @@ public class UserController extends HttpServlet implements JsonUtil {
         HttpSession session = request.getSession(false);
         if (session == null) {
             writeJson(response, new Response<>("未登录", 401, null));
+            return;
         }
         long followerId = (long) session.getAttribute("id");
         long followedId = Long.parseLong(request.getParameter("followedId"));

@@ -33,10 +33,13 @@ public class ItemService implements ItemServiceImp{
         }
     }
 
-    public void delete(long id) throws ServiceException {
+    public void delete(long userId,long id) throws ServiceException {
         try {
             if (itemDAO.findById(id) == null) {
                 throw new ServiceException(404, "商品不存在");
+            }
+            if (itemDAO.findById(id).getId()!=userId) {
+                throw new ServiceException(403, "没有权限删除该商品");
             }
         } catch (SQLException e) {
             throw new ServiceException(500,e.getMessage());
