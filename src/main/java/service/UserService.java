@@ -7,6 +7,7 @@ import exception.ServiceException;
 import util.PasswordUtil;
 
 import java.sql.SQLException;
+import java.util.List;
 
 
 public class UserService implements UserServiceImp {
@@ -151,6 +152,14 @@ public class UserService implements UserServiceImp {
             throw new ServiceException(404,"用户不存在");
         }
         return user;
+    }
+
+    public List<User> search(String username) throws ServiceException {
+        try {
+            return userDAO.search(username);
+        } catch (SQLException e) {
+            throw new ServiceException(500,e.getMessage());
+        }
     }
 
     public User update(long id, String username, String email, String phone, String info) throws ServiceException {

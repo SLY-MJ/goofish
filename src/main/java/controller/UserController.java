@@ -45,6 +45,8 @@ public class UserController extends HttpServlet implements JsonUtil {
                 case "/fans":
                     getFans(request, response);
                     break;
+                case "/search":
+                    search(request,response);
                 default:
                     writeJson(response, new Response<>("不支持的 GET 操作: " + path, 404, null));
             }
@@ -147,6 +149,16 @@ public class UserController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("获取粉丝成功", 200, UserResponse.dto(fans)));
     }
 
+    private void search(HttpServletRequest request, HttpServletResponse response){
+        String username = request.getParameter("username");
+        List<User> users = null;
+        try {
+            users = userService.search(username);
+        } catch (ServiceException e) {
+            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+        }
+        writeJson(response, new Response<>("搜索成功", 200, UserResponse.dto(users)));
+    }
 
     //================POST函数================
     private void register(HttpServletRequest request, HttpServletResponse response) {

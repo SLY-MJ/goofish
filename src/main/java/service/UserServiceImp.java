@@ -3,6 +3,8 @@ package service;
 import entity.User;
 import exception.ServiceException;
 
+import java.util.List;
+
 public interface UserServiceImp {
     User register(String username, String password, String role) throws ServiceException;
 
@@ -15,6 +17,8 @@ public interface UserServiceImp {
     User recharge(long userId, double amount) throws ServiceException;
 
     User getUserById(long id) throws ServiceException;
+
+    List<User> search(String username) throws ServiceException;
 
     User update(long id, String username, String email, String phone, String info) throws ServiceException;
 

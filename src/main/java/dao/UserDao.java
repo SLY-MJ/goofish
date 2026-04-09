@@ -66,7 +66,7 @@ public class UserDao {
     }
 
     public List<User> findByRole(UserRole role) throws SQLException {
-        String sql = "select * from users where role=?";
+        String sql = "select * from users where role =?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, role.name());
@@ -83,6 +83,20 @@ public class UserDao {
         String sql = "select * from users";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            List<User> users = new ArrayList<>();
+            while (rs.next()) {
+                users.add(getUser(rs));
+            }
+            return users;
+        }
+    }
+
+    public List<User> search(String username) throws SQLException {
+        String sql = "select * from users where username like ?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setString(1, "%"+username+"%");
             ResultSet rs = ps.executeQuery();
             List<User> users = new ArrayList<>();
             while (rs.next()) {
