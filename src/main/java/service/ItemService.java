@@ -38,7 +38,7 @@ public class ItemService implements ItemServiceImp{
             if (itemDAO.findById(id) == null) {
                 throw new ServiceException(404, "商品不存在");
             }
-            if (itemDAO.findById(id).getId()!=userId) {
+            if (itemDAO.findById(id).getSellerId()!=userId) {
                 throw new ServiceException(403, "没有权限删除该商品");
             }
         } catch (SQLException e) {
