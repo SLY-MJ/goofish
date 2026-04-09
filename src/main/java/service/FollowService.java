@@ -6,6 +6,8 @@ import entity.Follow;
 import entity.User;
 
 import exception.ServiceException;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class FollowService {
@@ -50,7 +52,7 @@ public class FollowService {
         if(follows==null|| follows.isEmpty()){
             throw new ServiceException(404,"没有找到相关关注");
         }
-        List<User> users = null;
+        List<User> users = new ArrayList<>();
         try{
             for(Follow follow:follows){
                 User user=userDao.findById(follow.getFollowerId());
@@ -77,7 +79,7 @@ public class FollowService {
         if(followed==null|| followed.isEmpty()){
             throw new ServiceException(404,"没有找到相关关注");
         }
-        List<User> users = null;
+        List<User> users = new ArrayList<>();
         try{
             for(Follow follow:followed){
                 User user=userDao.findById(follow.getFollowedId());

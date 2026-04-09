@@ -7,6 +7,7 @@ import entity.Item;
 import exception.ServiceException;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FavoriteService implements FavoriteServiceImp {
@@ -47,7 +48,7 @@ public class FavoriteService implements FavoriteServiceImp {
         if (list == null || list.isEmpty()) {
             throw new ServiceException(404, "没有收藏的商品");
         }
-        List<Item> items = null;
+        List<Item> items = new ArrayList<>();
         for(Favorite favorite : list){
             Item item;
             try {
