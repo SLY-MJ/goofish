@@ -13,22 +13,12 @@ import java.util.List;
 public class UserService implements UserServiceImp {
     private final UserDao userDAO = new UserDao();
 
-    public User register(String username, String password, String role) throws ServiceException {
+    public User register(String username, String password) throws ServiceException {
         if (username.length() >= 40 || username.isEmpty()) {
             throw new ServiceException(400, "用户名长度必须在1-40之间");
         }
         if (password.length() >= 40 || password.length() <= 8) {
             throw new ServiceException(400, "密码长度必须在8-40之间");
-        }
-        UserRole userRole;
-        if (role == null || role.trim().isEmpty()) {
-            userRole = UserRole.USER;
-        } else {
-            try {
-                userRole = UserRole.valueOf(role.trim().toUpperCase());
-            } catch (Exception e) {
-                throw new ServiceException(400, "无效的角色: " + role);
-            }
         }
         try {
             if (userDAO.findByUsername(username) != null) {
@@ -39,7 +29,7 @@ public class UserService implements UserServiceImp {
         }
         PasswordUtil.HashSalt hashSalt = PasswordUtil.hash(password);
 
-        User user = new User(username, hashSalt.hash(), hashSalt.salt(), userRole);
+        User user = new User(username, hashSalt.hash(), hashSalt.salt(), UserRole.USER);
         //返回-1表示注册失败
         long id ;
         try {

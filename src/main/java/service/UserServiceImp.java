@@ -6,7 +6,7 @@ import exception.ServiceException;
 import java.util.List;
 
 public interface UserServiceImp {
-    User register(String username, String password, String role) throws ServiceException;
+    User register(String username, String password) throws ServiceException;
 
     User login(String username, String password) throws ServiceException;
 
