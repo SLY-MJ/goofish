@@ -13,51 +13,59 @@ import java.util.List;
 public class FavoriteService implements FavoriteServiceImp {
     private final ItemDao itemDao = new ItemDao();
     private final FavoriteDao favoriteDao = new FavoriteDao();
-    public void add(long userId,long itemId) throws ServiceException {
-        if (userId <= 0||itemId <= 0) {
-            throw new ServiceException(401, "传入用户或商品不存在");
+
+    @Override
+    public void add(long userId, long itemId) throws ServiceException {
+        if (userId <= 0 || itemId <= 0) {
+            throw new ServiceException(400, "Invalid favorite request");
         }
-        try{
-            favoriteDao.add(userId,itemId);
-        }catch (Exception e){
+
+        try {
+            favoriteDao.add(userId, itemId);
+        } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
 
-    public void remove(long userId,long itemId) throws ServiceException {
-        if (userId <= 0||itemId <= 0) {
-            throw new ServiceException(401, "传入用户或商品不存在");
+    @Override
+    public void remove(long userId, long itemId) throws ServiceException {
+        if (userId <= 0 || itemId <= 0) {
+            throw new ServiceException(400, "Invalid favorite request");
         }
-        try{
-            favoriteDao.delete(userId,itemId);
-        }catch (Exception e){
+
+        try {
+            favoriteDao.delete(userId, itemId);
+        } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
 
+    @Override
     public List<Item> getMyFavorite(long userId) throws ServiceException {
-        if(userId <= 0){
-            throw new ServiceException(401, "传入用户不存在");
+        if (userId <= 0) {
+            throw new ServiceException(400, "Invalid user id");
         }
-        List<Favorite> list;
-        try{
-            list=favoriteDao.getByUserId(userId);
-        }catch (Exception e){
+
+        try {
+            List<Favorite> favorites = favoriteDao.getByUserId(userId);
+            List<Item> items = new ArrayList<>();
+            if (favorites == null || favorites.isEmpty()) {
+                return items;
+            }
+
+            for (Favorite favorite : favorites) {
+                try {
+                    Item item = itemDao.findById(favorite.getItemId());
+                    if (item != null) {
+                        items.add(item);
+                    }
+                } catch (Exception e) {
+                    throw new ServiceException(500, e.getMessage());
+                }
+            }
+            return items;
+        } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
         }
-        if (list == null || list.isEmpty()) {
-            throw new ServiceException(404, "没有收藏的商品");
-        }
-        List<Item> items = new ArrayList<>();
-        for(Favorite favorite : list){
-            Item item;
-            try {
-                item=itemDao.findById(favorite.getItemId());
-            } catch (SQLException e) {
-                throw new ServiceException(500,e.getMessage());
-            }
-            items.add(item);
-        }
-        return items;
     }
 }

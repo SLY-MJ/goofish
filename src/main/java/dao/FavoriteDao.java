@@ -6,6 +6,7 @@ import util.DbUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,11 +17,11 @@ public class FavoriteDao {
     public long add(long userId, long itemId) throws Exception {
         String sql = "insert into favorites(user_id,item_id) values(?,?)";
         try (Connection c = DbUtil.getConnection()) {
-            PreparedStatement ps = c.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setLong(1, userId);
             ps.setLong(2, itemId);
             ps.executeUpdate();
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
                 return rs.getLong(1);
             }

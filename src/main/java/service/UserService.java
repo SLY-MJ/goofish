@@ -9,183 +9,174 @@ import util.PasswordUtil;
 import java.sql.SQLException;
 import java.util.List;
 
-
 public class UserService implements UserServiceImp {
-    private final UserDao userDAO = new UserDao();
+    private final UserDao userDao = new UserDao();
 
+    @Override
     public User register(String username, String password) throws ServiceException {
-        if (username.length() >= 40 || username.isEmpty()) {
-            throw new ServiceException(400, "用户名长度必须在1-40之间");
-        }
-        if (password.length() >= 40 || password.length() <= 8) {
-            throw new ServiceException(400, "密码长度必须在8-40之间");
-        }
-        try {
-            if (userDAO.findByUsername(username) != null) {
-                throw new ServiceException(404, "用户名已存在");
-            }
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
-        }
-        PasswordUtil.HashSalt hashSalt = PasswordUtil.hash(password);
+        validateUsername(username);
+        validatePassword(password);
 
-        User user = new User(username, hashSalt.hash(), hashSalt.salt(), UserRole.USER);
-        //返回-1表示注册失败
-        long id ;
         try {
-            id= userDAO.add(user);
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
-        }
-        if (id != -1) {
+            if (userDao.findByUsername(username) != null) {
+                throw new ServiceException(400, "Username already exists");
+            }
+
+            PasswordUtil.HashSalt hashSalt = PasswordUtil.hash(password);
+            User user = new User(username, hashSalt.hash(), hashSalt.salt(), UserRole.USER);
+            long id = userDao.add(user);
+            if (id <= 0) {
+                throw new ServiceException(500, "Failed to register user");
+            }
             user.setId(id);
             return user;
-        } else {
-            throw new ServiceException(500, "注册失败");
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
         }
     }
 
+    @Override
     public User login(String username, String password) throws ServiceException {
-        if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
-            throw new ServiceException(400, "用户名和密码不能为空");
+        if (isBlank(username) || isBlank(password)) {
+            throw new ServiceException(400, "Username and password are required");
         }
-        User user ;
+
         try {
-            user=userDAO.findByUsername(username);
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
-        }
-        if (user == null) {
-            throw new ServiceException(404, "用户名不存在");
-        }
-        PasswordUtil.HashSalt hashSalt = new PasswordUtil.HashSalt(user.getPasswordHash(), user.getSalt());
-        if (PasswordUtil.verify(password, hashSalt)) {
+            User user = userDao.findByUsername(username);
+            if (user == null) {
+                throw new ServiceException(404, "User not found");
+            }
+            PasswordUtil.HashSalt hashSalt = new PasswordUtil.HashSalt(user.getPasswordHash(), user.getSalt());
+            if (!PasswordUtil.verify(password, hashSalt)) {
+                throw new ServiceException(401, "Invalid password");
+            }
             return user;
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
         }
-        throw new ServiceException(401, "密码错误");
     }
 
+    @Override
     public void deleteUser(long id) throws ServiceException {
-        try {
-            if (userDAO.findById(id) == null) {
-                throw new ServiceException(404,"用户不存在");
-            }
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
+        User user = getUserById(id);
+        if (user == null) {
+            throw new ServiceException(404, "User not found");
         }
+
         try {
-            userDAO.delete(id);
+            userDao.delete(id);
         } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
+            throw new ServiceException(500, e.getMessage());
         }
     }
 
+    @Override
     public User changePassword(long userId, String oldPassword, String newPassword) throws ServiceException {
-        User user = null;
-        try {
-            user = userDAO.findById(userId);
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
+        validatePassword(newPassword);
+
+        User user = getUserById(userId);
+        PasswordUtil.HashSalt currentHash = new PasswordUtil.HashSalt(user.getPasswordHash(), user.getSalt());
+        if (!PasswordUtil.verify(oldPassword, currentHash)) {
+            throw new ServiceException(401, "Old password is incorrect");
         }
-        if (user == null) {
-            throw new ServiceException(404, "用户不存在");
-        }
-        PasswordUtil.HashSalt hashSalt = new PasswordUtil.HashSalt(user.getPasswordHash(), user.getSalt());
-        if (!PasswordUtil.verify(oldPassword, hashSalt)) {
-            throw new ServiceException(401,"旧密码错误");
-        }
-        PasswordUtil.HashSalt newHashSalt = PasswordUtil.hash(newPassword);
-        user.setPasswordHash(newHashSalt.hash());
-        user.setSalt(newHashSalt.salt());
+
+        PasswordUtil.HashSalt newHash = PasswordUtil.hash(newPassword);
+        user.setPasswordHash(newHash.hash());
+        user.setSalt(newHash.salt());
 
         try {
-            if (userDAO.update(user)) {
-                return user;
-            }
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
-        }
-        return null;
-    }
-
-    public User recharge(long userId, double amount) throws ServiceException {
-        try {
-            if (userDAO.findById(userId) == null) {
-                throw new ServiceException(404,"用户不存在");
-            }
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
-        }
-        User user = null;
-        try {
-            user = userDAO.findById(userId);
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
-        }
-        user.setWalletBalance(user.getWalletBalance() + amount);
-        try {
-            userDAO.update(user);
+            userDao.updatePassword(user);
             return user;
-        } catch (Exception e) {
-            throw new ServiceException(500,e.getMessage());
-        }
-    }
-
-    public User getUserById(long id) throws ServiceException {
-        User user = null;
-        try {
-            user = userDAO.findById(id);
         } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
+            throw new ServiceException(500, e.getMessage());
         }
-        if (user == null) {
-            throw new ServiceException(404,"用户不存在");
-        }
-        return user;
     }
 
+    @Override
+    public User recharge(long userId, double amount) throws ServiceException {
+        if (amount <= 0) {
+            throw new ServiceException(400, "Recharge amount must be greater than 0");
+        }
+
+        User user = getUserById(userId);
+        user.setWalletBalance(user.getWalletBalance() + amount);
+
+        try {
+            userDao.updateWalletBalance(user);
+            return user;
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public User getUserById(long id) throws ServiceException {
+        try {
+            User user = userDao.findById(id);
+            if (user == null) {
+                throw new ServiceException(404, "User not found");
+            }
+            return user;
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
     public List<User> search(String username) throws ServiceException {
         try {
-            return userDAO.search(username);
+            return userDao.search(username == null ? "" : username.trim());
         } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
+            throw new ServiceException(500, e.getMessage());
         }
     }
 
+    @Override
     public User update(long id, String username, String email, String phone, String info) throws ServiceException {
-        User user = null;
-        try {
-            user = userDAO.findById(id);
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
-        }
-        if (user == null) {
-            throw new ServiceException(404,"用户不存在");
-        }
-        try {
-            if (userDAO.findByUsername(username) != null) {
-                throw new ServiceException(400,"用户名已存在");
+        User user = getUserById(id);
+
+        if (!isBlank(username)) {
+            try {
+                User existing = userDao.findByUsername(username);
+                if (existing != null && existing.getId() != id) {
+                    throw new ServiceException(400, "Username already exists");
+                }
+            } catch (SQLException e) {
+                throw new ServiceException(500, e.getMessage());
             }
-        } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
+            user.setUsername(username.trim());
         }
-        if (username != null && !username.isEmpty()) {
-            user.setUsername(username);
+        if (!isBlank(email)) {
+            user.setEmail(email.trim());
         }
-        if (email != null && !email.isEmpty()) {
-            user.setEmail(email);
+        if (!isBlank(phone)) {
+            user.setPhone(phone.trim());
         }
-        if (phone != null && !phone.isEmpty()) {
-            user.setPhone(phone);
+        if (!isBlank(info)) {
+            user.setInformation(info.trim());
         }
-        if (info != null && !info.isEmpty()) {
-            user.setInformation(info);
-        }
+
         try {
-            userDAO.update(user);
+            userDao.update(user);
+            return user;
         } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
+            throw new ServiceException(500, e.getMessage());
         }
-        return user;
+    }
+
+    private void validateUsername(String username) throws ServiceException {
+        if (isBlank(username) || username.length() > 40) {
+            throw new ServiceException(400, "Username length must be between 1 and 40");
+        }
+    }
+
+    private void validatePassword(String password) throws ServiceException {
+        if (isBlank(password) || password.length() < 6 || password.length() > 40) {
+            throw new ServiceException(400, "Password length must be between 6 and 40");
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

@@ -1,10 +1,6 @@
 package service;
 
-import dao.FavoriteDao;
 import dao.ItemDao;
-import dao.ItemImageDao;
-import dao.ItemTagDao;
-import entity.Favorite;
 import entity.Item;
 import enums.ItemStatus;
 import exception.ServiceException;
@@ -12,135 +8,146 @@ import exception.ServiceException;
 import java.sql.SQLException;
 import java.util.List;
 
-public class ItemService implements ItemServiceImp{
-    private final ItemDao itemDAO = new ItemDao();
-    private final FavoriteDao favoriteDAO = new FavoriteDao();
-    private final ItemImageDao itemImageDAO = new ItemImageDao();
-    private final ItemTagDao itemTagDAO = new ItemTagDao();
+public class ItemService implements ItemServiceImp {
+    private final ItemDao itemDao = new ItemDao();
 
-    public long add(long id, String title, String description, double price, String coverImage) throws ServiceException {
-        Item item = new Item(id, title, description, price, 1, coverImage);
-        long itemID;
+    @Override
+    public long add(long sellerId, String title, String description, double price, String coverImage) throws ServiceException {
+        if (sellerId <= 0) {
+            throw new ServiceException(400, "Invalid seller id");
+        }
+        if (title == null || title.trim().isEmpty()) {
+            throw new ServiceException(400, "Title is required");
+        }
+        if (price <= 0) {
+            throw new ServiceException(400, "Price must be greater than 0");
+        }
+
+        Item item = new Item(sellerId, title.trim(), description == null ? "" : description.trim(), price, 1, coverImage);
+        item.setStatus(ItemStatus.ON_SALE);
+
         try {
-            itemID = itemDAO.add(item);
+            long itemId = itemDao.add(item);
+            if (itemId <= 0) {
+                throw new ServiceException(500, "Failed to create item");
+            }
+            return itemId;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
-        if (itemID > 0) {
-            return itemID;
-        } else {
-            throw new ServiceException(500, "添加商品失败");
-        }
     }
 
-    public void delete(long userId,long id) throws ServiceException {
+    @Override
+    public void delete(long userId, long itemId) throws ServiceException {
         try {
-            if (itemDAO.findById(id) == null) {
-                throw new ServiceException(404, "商品不存在");
+            Item item = itemDao.findById(itemId);
+            if (item == null) {
+                throw new ServiceException(404, "Item not found");
             }
-            if (itemDAO.findById(id).getSellerId()!=userId) {
-                throw new ServiceException(403, "没有权限删除该商品");
+            if (item.getSellerId() != userId) {
+                throw new ServiceException(403, "No permission to delete this item");
             }
+            itemDao.delete(itemId);
         } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
-        }
-        try {
-            itemDAO.delete(id);
-        }catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
+            throw new ServiceException(500, e.getMessage());
         }
     }
 
-    public void edit(long id, String title, String description, double price, int stock, String status, String coverImage) throws ServiceException {
-        if (id <= 0) {
-            throw new ServiceException(401, "传入商品不存在");
-        }
+    @Override
+    public void edit(long userId, long itemId, String title, String description, double price, int stock, String status, String coverImage)
+            throws ServiceException {
         try {
-            if (itemDAO.findById(id) == null) {
-                throw new ServiceException(404, "商品不存在");
+            Item item = itemDao.findById(itemId);
+            if (item == null) {
+                throw new ServiceException(404, "Item not found");
             }
-            if (title != null && !title.isEmpty()) {
-                if (!itemDAO.updateTitle(id, title)) {
-                    throw new ServiceException(500, "更新商品标题失败");
-                }
+            if (item.getSellerId() != userId) {
+                throw new ServiceException(403, "No permission to edit this item");
             }
-            if (description != null && !description.isEmpty()) {
-                if (!itemDAO.updateDescription(id, description)) {
-                    throw new ServiceException(500, "更新商品描述失败");
-                }
+
+            if (title != null && !title.trim().isEmpty()) {
+                itemDao.updateTitle(itemId, title.trim());
+            }
+            if (description != null && !description.trim().isEmpty()) {
+                itemDao.updateDescription(itemId, description.trim());
             }
             if (price > 0) {
-                if (!itemDAO.updatePrice(id, price)) {
-                    throw new ServiceException(500, "更新商品价格失败");
-                }
+                itemDao.updatePrice(itemId, price);
             }
             if (stock > 0) {
-                if (!itemDAO.updateStock(id, stock)) {
-                    throw new ServiceException(500, "更新商品库存失败");
-                }
+                itemDao.updateStock(itemId, stock);
             }
-            if (status != null && !status.isEmpty()) {
-                if (!itemDAO.updateStatus(id, ItemStatus.valueOf(status))) {
-                    throw new ServiceException(500, "更新商品状态失败");
-                }
+            if (status != null && !status.trim().isEmpty()) {
+                itemDao.updateStatus(itemId, ItemStatus.valueOf(status.trim()));
             }
-            if (coverImage!= null && !coverImage.isEmpty()) {
-                if (!itemDAO.updateCoverImage(id, coverImage)) {
-                    throw new ServiceException(500, "更新商品封面失败");
-                }
+            if (coverImage != null && !coverImage.trim().isEmpty()) {
+                itemDao.updateCoverImage(itemId, coverImage.trim());
             }
+        } catch (IllegalArgumentException e) {
+            throw new ServiceException(400, "Invalid item status");
         } catch (SQLException e) {
-            throw new ServiceException(500,e.getMessage());
+            throw new ServiceException(500, e.getMessage());
         }
     }
 
-    public Item findById(long id) throws Exception {
-        Item item = itemDAO.findById(id);
-        if (item == null) {
-            throw new Exception("商品不存在");
+    @Override
+    public Item findById(long id) throws ServiceException {
+        try {
+            Item item = itemDao.findById(id);
+            if (item == null) {
+                throw new ServiceException(404, "Item not found");
+            }
+            return item;
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
         }
-        return item;
     }
 
+    @Override
     public List<Item> findBySeller(long sellerId) throws ServiceException {
-        List<Item> list;
         try {
-            list = itemDAO.findBySellerId(sellerId);
-        } catch (Exception e) {
+            return itemDao.findBySellerId(sellerId);
+        } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
-        if (list == null) {
-            throw new ServiceException(404, "该卖家没有商品");
+    }
+
+    @Override
+    public List<Item> findByStatus(ItemStatus status) throws ServiceException {
+        try {
+            return itemDao.findByStatus(status);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
         }
-        return list;
     }
 
-    public List<Item> findByStatus(ItemStatus status) throws Exception {
-        return itemDAO.findByStatus(status);
-    }
-
+    @Override
     public List<Item> search(String keyword) throws ServiceException {
-        if (keyword == null || keyword.isEmpty()) {
-            throw new ServiceException(401,"搜索关键词不能为空");
+        if (keyword == null || keyword.trim().isEmpty()) {
+            throw new ServiceException(400, "Search keyword is required");
         }
-        List<Item> list;
+
         try {
-            list = itemDAO.findByTitle(keyword);
-        } catch (Exception e) {
+            return itemDao.findByTitle(keyword.trim());
+        } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
-        return list;
     }
 
-    public List<Item> recommend(long userId) throws ServiceException {
-        int limit = 10;
-
-        List<Item> items = null;
+    @Override
+    public List<Item> recommend(Long userId) throws ServiceException {
         try {
-            items = itemDAO.findRandomItem(limit, userId);
-        } catch (Exception e) {
+            return itemDao.findRandomItem(10, userId);
+        } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
-        return items;
+    }
+
+    public void increaseViewCount(long itemId) throws ServiceException {
+        try {
+            itemDao.increaseViewCount(itemId);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
     }
 }

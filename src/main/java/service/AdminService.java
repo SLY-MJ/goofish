@@ -11,35 +11,36 @@ import util.PasswordUtil;
 import java.sql.SQLException;
 
 public class AdminService implements AdminServiceImp {
-    private final UserDao userDAO = new UserDao();
-    private final ItemDao itemDAO = new ItemDao();
-    private final CommentDao commentDAO = new CommentDao();
+    private final UserDao userDao = new UserDao();
+    private final ItemDao itemDao = new ItemDao();
+    private final CommentDao commentDao = new CommentDao();
 
     @Override
     public User registerAdmin(long id, String username, String password) throws ServiceException {
         identify(id);
-        try {
-            if (userDAO.findByUsername(username) != null) {
-                throw new ServiceException(404, "用户名已存在");
-            }
-        } catch (SQLException e) {
-            throw new ServiceException(500, e.getMessage());
+        if (username == null || username.trim().isEmpty()) {
+            throw new ServiceException(400, "Username is required");
         }
-        PasswordUtil.HashSalt hashSalt = PasswordUtil.hash(password);
+        if (password == null || password.length() < 6) {
+            throw new ServiceException(400, "Password length must be at least 6");
+        }
 
-        User user = new User(username, hashSalt.hash(), hashSalt.salt(), UserRole.ADMIN);
-        //返回-1表示注册失败
-        long check;
         try {
-            check = userDAO.add(user);
+            if (userDao.findByUsername(username.trim()) != null) {
+                throw new ServiceException(400, "Username already exists");
+            }
+            PasswordUtil.HashSalt hashSalt = PasswordUtil.hash(password);
+            User user = new User(username.trim(), hashSalt.hash(), hashSalt.salt(), UserRole.ADMIN);
+            long adminId = userDao.add(user);
+            if (adminId <= 0) {
+                throw new ServiceException(500, "Failed to create admin");
+            }
+            user.setId(adminId);
+            return user;
+        } catch (ServiceException e) {
+            throw e;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
-        }
-        if (check != -1) {
-            user.setId(check);
-            return user;
-        } else {
-            throw new ServiceException(500, "注册失败");
         }
     }
 
@@ -47,7 +48,7 @@ public class AdminService implements AdminServiceImp {
     public void deleteComment(long adminId, long id) throws ServiceException {
         identify(adminId);
         try {
-            commentDAO.delete(id);
+            commentDao.delete(id);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -57,7 +58,7 @@ public class AdminService implements AdminServiceImp {
     public void deleteItem(long adminId, long id) throws ServiceException {
         identify(adminId);
         try {
-            itemDAO.delete(id);
+            itemDao.delete(id);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -67,7 +68,7 @@ public class AdminService implements AdminServiceImp {
     public void deleteUser(long adminId, long id) throws ServiceException {
         identify(adminId);
         try {
-            userDAO.delete(id);
+            userDao.delete(id);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -75,8 +76,12 @@ public class AdminService implements AdminServiceImp {
 
     private void identify(long id) throws ServiceException {
         try {
-            if (userDAO.findById(id).getRole() != UserRole.ADMIN) {
-                throw new ServiceException(403, "权限不足");
+            User user = userDao.findById(id);
+            if (user == null) {
+                throw new ServiceException(404, "User not found");
+            }
+            if (user.getRole() != UserRole.ADMIN) {
+                throw new ServiceException(403, "Admin permission required");
             }
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());

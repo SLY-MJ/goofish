@@ -203,14 +203,19 @@ public class UserDao {
     }
 
     public boolean update(User user) throws SQLException {
-        String sql = "update users set username=?,email=?,phone=?,information=? where id=?";
+        String sql = "update users set username=?,email=?,phone=?,password_hash=?,salt=?,role=?,information=?,wallet_balance=?,status=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getEmail());
             ps.setString(3, user.getPhone());
-            ps.setString(4, user.getInformation());
-            ps.setLong(5, user.getId());
+            ps.setString(4, user.getPasswordHash());
+            ps.setString(5, user.getSalt());
+            ps.setString(6, user.getRole().name());
+            ps.setString(7, user.getInformation());
+            ps.setDouble(8, user.getWalletBalance());
+            ps.setBoolean(9, user.getStatus());
+            ps.setLong(10, user.getId());
             ps.executeUpdate();
             return true;
         }

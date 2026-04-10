@@ -18,117 +18,139 @@ public class OrderController extends HttpServlet implements JsonUtil {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         String path = request.getPathInfo();
-        if (path == null || path.equals("/")) {
-            writeJson(response, new Response<>("无法识别path", 401, null));
+        if (path == null || "/".equals(path)) {
+            writeJson(response, new Response<>("Unknown path", 404, null));
+            return;
         }
-        switch (path) {
-            case "/buylist":
-                buyOrder(request, response);
-                break;
-            case "/sellist":
-                sellOrder(request, response);
-                break;
-            default:
-                writeJson(response, new Response<>("无法识别path", 401, null));
+
+        try {
+            switch (path) {
+                case "/buylist":
+                    buyOrder(request, response);
+                    break;
+                case "/sellist":
+                    sellOrder(request, response);
+                    break;
+                default:
+                    writeJson(response, new Response<>("Unsupported GET path", 404, null));
+            }
+        } catch (ServiceException e) {
+            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            writeJson(response, new Response<>(e.getMessage(), 500, null));
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        // 处理订单创建
         String path = request.getPathInfo();
-        if (path == null || path.equals("/")) {
-            writeJson(response, new Response<>("无法识别path", 401, null));
+        if (path == null || "/".equals(path)) {
+            writeJson(response, new Response<>("Unknown path", 404, null));
+            return;
         }
-        switch (path) {
-            case "/create":
-                createOrder(request, response);
-                break;
-            case "/delete":
-                deleteOrder(request,response);
-                break;
-            case "/pay":
-                pay(request,response);
-                break;
-            case "/cancel":
-                cancel(request,response);
-                break;
-            default:
-                writeJson(response, new Response<>("无法识别path", 401, null));
-        }
-    }
 
-    //=======GET=======
-    private void buyOrder(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session==null){
-            writeJson(response,new Response<>("未登录", 401, null));
-        }
-        long buyerId=(long) session.getAttribute("userId");
         try {
-            writeJson(response, new Response<>(null, 200, orderService.getByBuyer(buyerId)));
-        } catch (Exception e) {
-            writeJson(response, new Response<>(e.getMessage(), 500, null));
-        }
-    }
-
-    private void sellOrder(HttpServletRequest request, HttpServletResponse response) {
-        long sellerId=Long.parseLong(request.getParameter("userId"));
-        try{
-            writeJson(response, new Response<>(null, 200, orderService.getBySeller(sellerId)));
-        } catch (Exception e) {
-            writeJson(response, new Response<>(e.getMessage(), 500, null));
-        }
-    }
-
-    //=======POST========
-    private void createOrder(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session==null){
-            writeJson(response,new Response<>("未登录", 401, null));
-        }
-        long buyerId=(long) session.getAttribute("userId");
-        long sellerId=Long.parseLong(request.getParameter("sellerId"));
-        long itemId=Long.parseLong(request.getParameter("itemId"));
-        try{
-            orderService.add(itemId, buyerId, sellerId);
+            switch (path) {
+                case "/create":
+                    createOrder(request, response);
+                    break;
+                case "/delete":
+                    deleteOrder(request, response);
+                    break;
+                case "/pay":
+                    pay(request, response);
+                    break;
+                case "/cancel":
+                    cancel(request, response);
+                    break;
+                default:
+                    writeJson(response, new Response<>("Unsupported POST path", 404, null));
+            }
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+            writeJson(response, new Response<>(e.getMessage(), 500, null));
         }
-        writeJson(response,new Response<>("订单创建成功",200,null));
     }
 
-    private void deleteOrder(HttpServletRequest request, HttpServletResponse response) {
-        long itemId=Long.parseLong(request.getParameter("itemId"));
-        try {
-            orderService.delete(itemId);
-        }catch (ServiceException e){
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+    private void buyOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        writeJson(response,new Response<>("订单删除成功",200,null));
+
+        writeJson(response, new Response<>("ok", 200, orderService.getByBuyer(userId)));
     }
 
-    private void pay(HttpServletRequest request, HttpServletResponse response) {
-        long orderId=Long.parseLong(request.getParameter("orderId"));
-        try {
-            orderService.trade(orderId);
-        }catch (ServiceException e){
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+    private void sellOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        writeJson(response,new Response<>("订单支付成功",200,null));
+
+        writeJson(response, new Response<>("ok", 200, orderService.getBySeller(userId)));
     }
 
-    private void cancel(HttpServletRequest request, HttpServletResponse response) {
-        long orderId=Long.parseLong(request.getParameter("orderId"));
-        try {
-            orderService.cancel(orderId);
-        }catch (ServiceException e){
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+    private void createOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        writeJson(response,new Response<>("订单取消成功",200,null));
+
+        long itemId = Long.parseLong(request.getParameter("itemId"));
+        long sellerId = Long.parseLong(request.getParameter("sellerId"));
+        orderService.add(itemId, userId, sellerId);
+        writeJson(response, new Response<>("ok", 200, null));
+    }
+
+    private void deleteOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
+            return;
+        }
+
+        String orderId = request.getParameter("orderId");
+        String itemId = request.getParameter("itemId");
+        if (orderId != null && !orderId.isBlank()) {
+            orderService.delete(Long.parseLong(orderId), userId);
+        } else if (itemId != null && !itemId.isBlank()) {
+            orderService.deleteByItemId(Long.parseLong(itemId), userId);
+        } else {
+            throw new ServiceException(400, "orderId or itemId is required");
+        }
+        writeJson(response, new Response<>("ok", 200, null));
+    }
+
+    private void pay(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
+            return;
+        }
+
+        long orderId = Long.parseLong(request.getParameter("orderId"));
+        orderService.trade(orderId, userId);
+        writeJson(response, new Response<>("ok", 200, null));
+    }
+
+    private void cancel(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
+            return;
+        }
+
+        long orderId = Long.parseLong(request.getParameter("orderId"));
+        orderService.cancel(orderId, userId);
+        writeJson(response, new Response<>("ok", 200, null));
+    }
+
+    private Long getLoginUserId(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("id") == null) {
+            writeJson(response, new Response<>("Not logged in", 401, null));
+            return null;
+        }
+        return ((Number) session.getAttribute("id")).longValue();
     }
 }

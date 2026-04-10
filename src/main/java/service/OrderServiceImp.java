@@ -10,13 +10,15 @@ import java.util.List;
 public interface OrderServiceImp {
     void add(long itemId, long buyerId, long sellerIdu) throws ServiceException;
 
-    void delete(long id) throws ServiceException;
+    void delete(long id, long operatorUserId) throws ServiceException;
+
+    void deleteByItemId(long itemId, long operatorUserId) throws ServiceException;
 
     void changeStatus(long id, OrderStatus status) throws ServiceException;
 
-    void trade(long id) throws ServiceException;
+    void trade(long id, long operatorUserId) throws ServiceException;
 
-    void cancel(long id) throws ServiceException;
+    void cancel(long id, long operatorUserId) throws ServiceException;
 
     List<OrderResponse> getByBuyer(long id) throws ServiceException;
 

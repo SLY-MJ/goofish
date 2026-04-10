@@ -3,13 +3,12 @@ package controller;
 import bean.CommentResponse;
 import bean.ItemResponse;
 import bean.Response;
-import com.google.gson.Gson;
 import entity.Comment;
 import entity.Item;
+import exception.ServiceException;
 import service.CommentService;
 import service.FavoriteService;
 import service.ItemService;
-import exception.ServiceException;
 import util.JsonUtil;
 
 import javax.servlet.annotation.WebServlet;
@@ -24,13 +23,12 @@ public class ItemController extends HttpServlet implements JsonUtil {
     private final ItemService itemService = new ItemService();
     private final FavoriteService favoriteService = new FavoriteService();
     private final CommentService commentService = new CommentService();
-    private final Gson gson = new Gson();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response){
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         String path = request.getPathInfo();
-        if (path == null || path.equals("/")) {
-            writeJson(response, new Response<>("无法识别标签", 404, null));
+        if (path == null || "/".equals(path)) {
+            writeJson(response, new Response<>("Unknown path", 404, null));
             return;
         }
 
@@ -52,21 +50,27 @@ public class ItemController extends HttpServlet implements JsonUtil {
                     getMyFavorite(request, response);
                     break;
                 case "/comment":
-                    getComment(request,response);
+                    getComment(request, response);
                     break;
+                default:
+                    writeJson(response, new Response<>("Unsupported GET path", 404, null));
             }
+        } catch (ServiceException e) {
+            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         } catch (Exception e) {
             e.printStackTrace();
+            writeJson(response, new Response<>(e.getMessage(), 500, null));
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
         String path = request.getPathInfo();
-        if (path == null || path.equals("/")) {
-            writeJson(response, new Response<>("无法识别标签", 404, null));
+        if (path == null || "/".equals(path)) {
+            writeJson(response, new Response<>("Unknown path", 404, null));
             return;
         }
+
         try {
             switch (path) {
                 case "/add":
@@ -85,233 +89,171 @@ public class ItemController extends HttpServlet implements JsonUtil {
                     unfavorite(request, response);
                     break;
                 case "/addComment":
-                    addComment(request,response);
+                    addComment(request, response);
                     break;
                 case "/deleteComment":
-                    deleteComment(request,response);
+                    deleteComment(request, response);
                     break;
+                default:
+                    writeJson(response, new Response<>("Unsupported POST path", 404, null));
             }
+        } catch (ServiceException e) {
+            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         } catch (Exception e) {
             e.printStackTrace();
+            writeJson(response, new Response<>(e.getMessage(), 500, null));
         }
     }
 
-    //=======GET方法=========
-    private void getMy(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("请先登录", 401, null));
+    private void getMy(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long userId = (long) session.getAttribute("id");
-        List<Item> items = null;
-        try {
-            items = itemService.findBySeller(userId);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("获取我的商品成功", 200, ItemResponse.dto(items)));
+
+        List<Item> items = itemService.findBySeller(userId);
+        writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
-    private void getRecommend(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("请先登录", 401, null));
-            return;
-        }
-        long userId = (long) session.getAttribute("id");
-        List<Item> items = null;
-        try {
-            items = itemService.recommend(userId);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("获取推荐商品成功", 200, ItemResponse.dto(items)));
+    private void getRecommend(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getOptionalLoginUserId(request);
+        List<Item> items = itemService.recommend(userId);
+        writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
-    private void getDetail(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("请先登录", 401, null));
-            return;
-        }
+    private void getDetail(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         long id = Long.parseLong(request.getParameter("id"));
-        Item item = null;
-        try {
-            item = itemService.findById(id);
-        } catch (Exception e) {
-            writeJson(response, new Response<>(e.getMessage(), 401, null));
-            return;
-        }
-        writeJson(response, new Response<>("获取商品详情成功", 200, item));
-
+        itemService.increaseViewCount(id);
+        Item item = itemService.findById(id);
+        writeJson(response, new Response<>("ok", 200, item));
     }
 
-    private void search(HttpServletRequest request, HttpServletResponse response) {
-        String keyword = request.getParameter("keyword");
-        List<Item> items = null;
-        try {
-            items = itemService.search(keyword);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("获取推荐商品成功", 200, ItemResponse.dto(items)));
+    private void search(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        List<Item> items = itemService.search(request.getParameter("keyword"));
+        writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
-    private void getMyFavorite(HttpServletRequest request,HttpServletResponse response){
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("请先登录", 401, null));
+    private void getMyFavorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long userId = (long) session.getAttribute("id");
-        List<Item> items = null;
-        try{
-            items=favoriteService.getMyFavorite(userId);
-        }catch (ServiceException e){
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("获取我的收藏成功", 200, ItemResponse.dto(items)));
+
+        List<Item> items = favoriteService.getMyFavorite(userId);
+        writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
-    private void getComment(HttpServletRequest request, HttpServletResponse response) {
-       long id = Long.parseLong(request.getParameter("id"));
-       List<Comment> comments = null;
-        try {
-            comments=commentService.findByItemId(id);
-        } catch (Exception e) {
-            writeJson(response, new Response<>(e.getMessage(), 401, null));
-            return;
-        }
-        writeJson(response, new Response<>("获取商品评论成功", 200, CommentResponse.dto(comments)));
-    }
-
-    //======POST方法=========
-    private void publish(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("请先登录", 401, null));
-            return;
-        }
-        long userId = (long) session.getAttribute("id");
-        String title = request.getParameter("title");
-        String description = request.getParameter("description");
-        double price = Double.parseDouble(request.getParameter("price"));
-        String coverImage = request.getParameter("coverImage");
-        try {
-            itemService.add(userId, title, description, price, coverImage);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response,new Response<>("发布成功",200,null));
-    }
-
-    private void edit(HttpServletRequest request, HttpServletResponse response) {
+    private void getComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         long id = Long.parseLong(request.getParameter("id"));
-        String title = request.getParameter("title");
-        String description = request.getParameter("description");
-        double price = Double.parseDouble(request.getParameter("price"));
-        int stock = Integer.parseInt(request.getParameter("stock"));
-        String status = request.getParameter("status");
-        String coverImage = request.getParameter("coverImage");
-        try {
-            itemService.edit(id, title, description, price, stock, status, coverImage);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("编辑商品成功", 200, null));
+        List<Comment> comments = commentService.findByItemId(id);
+        writeJson(response, new Response<>("ok", 200, CommentResponse.dto(comments)));
     }
 
-    private void delete(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("请先登录", 401, null));
+    private void publish(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long userId = (long) session.getAttribute("id");
+
+        itemService.add(
+                userId,
+                request.getParameter("title"),
+                request.getParameter("description"),
+                Double.parseDouble(request.getParameter("price")),
+                request.getParameter("coverImage")
+        );
+        writeJson(response, new Response<>("ok", 200, null));
+    }
+
+    private void edit(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
+            return;
+        }
+
+        itemService.edit(
+                userId,
+                Long.parseLong(request.getParameter("id")),
+                request.getParameter("title"),
+                request.getParameter("description"),
+                Double.parseDouble(request.getParameter("price")),
+                Integer.parseInt(request.getParameter("stock")),
+                request.getParameter("status"),
+                request.getParameter("coverImage")
+        );
+        writeJson(response, new Response<>("ok", 200, null));
+    }
+
+    private void delete(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
+            return;
+        }
+
         long id = Long.parseLong(request.getParameter("id"));
-        try {
-            itemService.delete(userId,id);
-        } catch (Exception e) {
-            writeJson(response, new Response<>(e.getMessage(), 401, null));
-            return;
-        }
-        writeJson(response, new Response<>("删除商品成功", 200, null));
+        itemService.delete(userId, id);
+        writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void favorite(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void favorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long userId = (long) session.getAttribute("id");
+
         long itemId = Long.parseLong(request.getParameter("id"));
-        try {
-            favoriteService.add(userId, itemId);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("收藏商品成功", 200, null));
+        favoriteService.add(userId, itemId);
+        writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void unfavorite(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void unfavorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long userId = (long) session.getAttribute("id");
+
         long itemId = Long.parseLong(request.getParameter("id"));
-        try {
-            favoriteService.remove(userId, itemId);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("取消收藏商品成功", 200, null));
+        favoriteService.remove(userId, itemId);
+        writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void  addComment(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void addComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long userId = (long) session.getAttribute("id");
+
         long itemId = Long.parseLong(request.getParameter("id"));
         String content = request.getParameter("content");
-        try{
-            commentService.add(itemId,userId,content);
-        }catch (ServiceException e){
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("添加评论成功", 200, null));
+        commentService.add(itemId, userId, content);
+        writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void deleteComment(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession();
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void deleteComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long userId = (long) session.getAttribute("id");
-        long id=Long.parseLong(request.getParameter("id"));
-        try{
-            commentService.delete(userId,id);
-        }catch (ServiceException e){
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("删除评论成功", 200, null));
+
+        long id = Long.parseLong(request.getParameter("id"));
+        commentService.delete(userId, id);
+        writeJson(response, new Response<>("ok", 200, null));
     }
 
+    private Long getLoginUserId(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("id") == null) {
+            writeJson(response, new Response<>("Not logged in", 401, null));
+            return null;
+        }
+        return ((Number) session.getAttribute("id")).longValue();
+    }
+
+    private Long getOptionalLoginUserId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("id") == null) {
+            return null;
+        }
+        return ((Number) session.getAttribute("id")).longValue();
+    }
 }

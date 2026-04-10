@@ -19,6 +19,7 @@ public class Response<T> {
     }
 
     public void setMessage(String message) {
+        this.message = message;
     }
 
     public int getCode() {

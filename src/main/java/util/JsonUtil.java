@@ -1,5 +1,6 @@
 package util;
 
+import bean.Response;
 import com.google.gson.Gson;
 
 import javax.servlet.http.HttpServletResponse;
@@ -10,12 +11,15 @@ public interface JsonUtil {
 
     default void writeJson(HttpServletResponse response, Object body) {
         try {
+            if (body instanceof Response<?> responseBody) {
+                response.setStatus(responseBody.getCode());
+            }
+            response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json;charset=UTF-8");
-            String json = gson.toJson(body);
-            response.getWriter().write(json);
+            response.getWriter().write(gson.toJson(body));
         } catch (IOException e) {
             e.printStackTrace();
-            response.setStatus(500);//返回前端状态码
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 }

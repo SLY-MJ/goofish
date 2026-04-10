@@ -8,47 +8,57 @@ import java.sql.SQLException;
 import java.util.List;
 
 public class CommentService implements CommentServiceImp {
-    private final CommentDao commentDAO = new CommentDao();
+    private final CommentDao commentDao = new CommentDao();
 
+    @Override
     public long add(long itemId, long userId, String content) throws ServiceException {
-        long commentID;
-        try {
-            commentID = commentDAO.add(itemId, userId, content);
-        } catch (SQLException e) {
-            throw new ServiceException(500, e.getMessage());
+        if (itemId <= 0 || userId <= 0) {
+            throw new ServiceException(400, "Invalid comment request");
         }
-        if (commentID > 0) {
-            return commentID;
-        } else {
-            throw new ServiceException(500, "添加评论失败");
+        if (content == null || content.trim().isEmpty()) {
+            throw new ServiceException(400, "Comment content is required");
         }
-    }
 
-    public boolean delete(long userId,long id) throws ServiceException {
         try {
-            if (commentDAO.findById(id) == null) {
-                throw new ServiceException(404, "评论不存在");
+            long commentId = commentDao.add(itemId, userId, content.trim());
+            if (commentId <= 0) {
+                throw new ServiceException(500, "Failed to create comment");
             }
-            if (commentDAO.findById(id).getUserId() != userId) {
-                throw new ServiceException(403, "无权删除他人评论");
-            }
-            return commentDAO.delete(id);
+            return commentId;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
 
+    @Override
+    public boolean delete(long userId, long id) throws ServiceException {
+        try {
+            Comment comment = commentDao.findById(id);
+            if (comment == null) {
+                throw new ServiceException(404, "Comment not found");
+            }
+            if (comment.getUserId() != userId) {
+                throw new ServiceException(403, "No permission to delete this comment");
+            }
+            return commentDao.delete(id);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
     public List<Comment> findByItemId(long itemId) throws ServiceException {
         try {
-            return commentDAO.findByItemId(itemId);
+            return commentDao.findByItemId(itemId);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
 
+    @Override
     public List<Comment> findByUserId(long userId) throws ServiceException {
         try {
-            return commentDAO.findByUserId(userId);
+            return commentDao.findByUserId(userId);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }

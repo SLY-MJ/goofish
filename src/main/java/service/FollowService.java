@@ -4,9 +4,9 @@ import dao.FollowDao;
 import dao.UserDao;
 import entity.Follow;
 import entity.User;
-
 import exception.ServiceException;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,80 +15,71 @@ public class FollowService {
     private final UserDao userDao = new UserDao();
 
     public long add(long followerId, long followedId) throws ServiceException {
-        if(followerId<0 || followedId<0){
-            throw new ServiceException(401,"ID格式不对");
+        if (followerId <= 0 || followedId <= 0) {
+            throw new ServiceException(400, "Invalid user id");
         }
-        long id;
-        try{
-            id=followDao.add(followerId, followedId);
-        }catch(Exception e){
-            throw new ServiceException(500,e.getMessage());
+        if (followerId == followedId) {
+            throw new ServiceException(400, "You cannot follow yourself");
         }
-        return id;
+
+        try {
+            return followDao.add(followerId, followedId);
+        } catch (Exception e) {
+            throw new ServiceException(500, e.getMessage());
+        }
     }
 
     public boolean delete(long followerId, long followedId) throws ServiceException {
-        if(followerId<0 || followedId<0){
-            throw new ServiceException(401,"ID格式不对");
+        if (followerId <= 0 || followedId <= 0) {
+            throw new ServiceException(400, "Invalid user id");
         }
-        try{
+
+        try {
             followDao.deleteByFollowerAndFollowed(followerId, followedId);
             return true;
-        }catch(Exception e){
-            throw new ServiceException(500,e.getMessage());
+        } catch (Exception e) {
+            throw new ServiceException(500, e.getMessage());
         }
     }
 
-    public List<User> getFollows(long followedId) throws ServiceException {
-        List<Follow> follows;
-        if(followedId<0){
-            throw new ServiceException(401,"ID格式不对");
+    public List<User> getFollows(long followerId) throws ServiceException {
+        if (followerId <= 0) {
+            throw new ServiceException(400, "Invalid user id");
         }
-        try{
-            follows=followDao.findByFollowedId(followedId);
-        }catch(Exception e){
-            throw new ServiceException(500,e.getMessage());
+
+        try {
+            List<Follow> follows = followDao.findByFollowerId(followerId);
+            return loadUsers(follows, true);
+        } catch (Exception e) {
+            throw new ServiceException(500, e.getMessage());
         }
-        if(follows==null|| follows.isEmpty()){
-            throw new ServiceException(404,"没有找到相关关注");
-        }
-        List<User> users = new ArrayList<>();
-        try{
-            for(Follow follow:follows){
-                User user=userDao.findById(follow.getFollowerId());
-                if (user != null) {
-                    users.add(user);
-                }
-            }
-        }catch (Exception e){
-            throw new ServiceException(500,e.getMessage());
-        }
-        return users;
     }
 
-    public List<User> getFans(long followerId) throws ServiceException {
-        List<Follow> followed;
-        if(followerId<0){
-            throw new ServiceException(401,"ID格式不对");
+    public List<User> getFans(long followedId) throws ServiceException {
+        if (followedId <= 0) {
+            throw new ServiceException(400, "Invalid user id");
         }
-        try{
-            followed=followDao.findByFollowerId(followerId);
-        }catch(Exception e){
-            throw new ServiceException(500,e.getMessage());
+
+        try {
+            List<Follow> fans = followDao.findByFollowedId(followedId);
+            return loadUsers(fans, false);
+        } catch (Exception e) {
+            throw new ServiceException(500, e.getMessage());
         }
-        if(followed==null|| followed.isEmpty()){
-            throw new ServiceException(404,"没有找到相关关注");
-        }
+    }
+
+    private List<User> loadUsers(List<Follow> follows, boolean useFollowedUser) throws SQLException {
         List<User> users = new ArrayList<>();
-        try{
-            for(Follow follow:followed){
-                User user=userDao.findById(follow.getFollowedId());
-                if (user != null) {
-                    users.add(user);
-                }
+        if (follows == null || follows.isEmpty()) {
+            return users;
+        }
+
+        for (Follow follow : follows) {
+            long userId = useFollowedUser ? follow.getFollowedId() : follow.getFollowerId();
+            User user = userDao.findById(userId);
+            if (user != null) {
+                users.add(user);
             }
-        }catch (Exception e){
-            throw new ServiceException(500,e.getMessage());
         }
         return users;
     }

@@ -2,14 +2,12 @@ package controller;
 
 import bean.Response;
 import bean.UserResponse;
-import com.google.gson.Gson;
 import entity.User;
+import exception.ServiceException;
 import service.FollowService;
 import service.UserService;
-import exception.ServiceException;
 import util.JsonUtil;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -18,7 +16,6 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-
 @WebServlet("/user/*")
 public class UserController extends HttpServlet implements JsonUtil {
     private final UserService userService = new UserService();
@@ -26,16 +23,15 @@ public class UserController extends HttpServlet implements JsonUtil {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        // 如果你有“获取当前登录用户信息”等接口，可以放在这里
         String path = request.getPathInfo();
-        if (path == null || path.equals("/")) {
-            writeJson(response, new Response<>("无法识别path", 404, null));
+        if (path == null || "/".equals(path)) {
+            writeJson(response, new Response<>("Unknown path", 404, null));
             return;
         }
 
         try {
             switch (path) {
-                case "/me":      // 获取当前登录用户信息
+                case "/me":
                     getCurrentUser(request, response);
                     break;
                 case "/follows":
@@ -45,11 +41,13 @@ public class UserController extends HttpServlet implements JsonUtil {
                     getFans(request, response);
                     break;
                 case "/search":
-                    search(request,response);
+                    search(request, response);
                     break;
                 default:
-                    writeJson(response, new Response<>("不支持的 GET 操作: " + path, 404, null));
+                    writeJson(response, new Response<>("Unsupported GET path", 404, null));
             }
+        } catch (ServiceException e) {
+            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         } catch (Exception e) {
             e.printStackTrace();
             writeJson(response, new Response<>(e.getMessage(), 500, null));
@@ -58,11 +56,10 @@ public class UserController extends HttpServlet implements JsonUtil {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // 所有写操作 POST 进来
         request.setCharacterEncoding("UTF-8");
         String path = request.getPathInfo();
-        if (path == null || path.equals("/")) {
-            writeJson(response, new Response<>("无法识别path", 404, null));
+        if (path == null || "/".equals(path)) {
+            writeJson(response, new Response<>("Unknown path", 404, null));
             return;
         }
 
@@ -93,202 +90,148 @@ public class UserController extends HttpServlet implements JsonUtil {
                     unfollow(request, response);
                     break;
                 default:
-                    writeJson(response, new Response<>("不支持的 POST 操作: " + path, 404, null));
+                    writeJson(response, new Response<>("Unsupported POST path", 404, null));
             }
+        } catch (ServiceException e) {
+            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
         } catch (Exception e) {
             e.printStackTrace();
             writeJson(response, new Response<>(e.getMessage(), 500, null));
         }
     }
 
-    //===============GET函数==============
-    private void getCurrentUser(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void getCurrentUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long id = (long) session.getAttribute("id");
-        User user = new User();
-        try {
-            user = userService.getUserById(id);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("获取用户信息成功", 200, new UserResponse(user)));
+
+        User user = userService.getUserById(userId);
+        writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
     }
 
-    private void getFollows(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void getFollows(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long id = (long) session.getAttribute("id");
-        List<User> follows = null;
-        try {
-            follows = followService.getFollows(id);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("获取成功", 200, UserResponse.dto(follows)));
+
+        List<User> follows = followService.getFollows(userId);
+        writeJson(response, new Response<>("ok", 200, UserResponse.dto(follows)));
     }
 
-    private void getFans(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void getFans(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long id = (long) session.getAttribute("id");
-        List<User> fans = null;
-        try {
-            fans = followService.getFans(id);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("获取粉丝成功", 200, UserResponse.dto(fans)));
+
+        List<User> fans = followService.getFans(userId);
+        writeJson(response, new Response<>("ok", 200, UserResponse.dto(fans)));
     }
 
-    private void search(HttpServletRequest request, HttpServletResponse response){
+    private void search(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         String username = request.getParameter("username");
-        List<User> users = null;
-        try {
-            users = userService.search(username);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("搜索成功", 200, UserResponse.dto(users)));
+        List<User> users = userService.search(username);
+        writeJson(response, new Response<>("ok", 200, UserResponse.dto(users)));
     }
 
-    //================POST函数================
-    private void register(HttpServletRequest request, HttpServletResponse response) {
-        //从request中获取参数
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-        User user;
-        try {
-            user = userService.register(username, password);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));//接收丢出的异常
-            return;
-        }
-        writeJson(response, new Response<>("注册成功", 200, new UserResponse(user)));
-        request.getSession().setAttribute("id", user.getId());
+    private void register(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        User user = userService.register(request.getParameter("username"), request.getParameter("password"));
+        request.getSession(true).setAttribute("id", user.getId());
+        writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
     }
 
-    private void login(HttpServletRequest request, HttpServletResponse response) {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-        User user;
-        try {
-            user = userService.login(username, password);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<UserResponse>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("登录成功", 200, new UserResponse(user)));
-        request.getSession().setAttribute("id", user.getId());
+    private void login(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        User user = userService.login(request.getParameter("username"), request.getParameter("password"));
+        request.getSession(true).setAttribute("id", user.getId());
+        writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
     }
 
     private void logout(HttpServletRequest request, HttpServletResponse response) {
-        request.getSession().invalidate();
-        writeJson(response, new Response<>("退出登录成功", 200, null));
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void update(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void update(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long id = (long) session.getAttribute("id");
-        String username = request.getParameter("username");
-        String email = request.getParameter("email");
-        String phone = request.getParameter("phone");
-        String information = request.getParameter("information");
-        User user;
-        try {
-            user = userService.update(id, username, email, phone, information);
-        } catch (Exception e) {
-            writeJson(response, new Response<>(e.getMessage(), 500, null));
-            return;
-        }
-        writeJson(response, new Response<>("更新成功", 200, new UserResponse(user)));
+
+        User user = userService.update(
+                userId,
+                request.getParameter("username"),
+                request.getParameter("email"),
+                request.getParameter("phone"),
+                request.getParameter("information")
+        );
+        writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
     }
 
-    private void changePassword(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void changePassword(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long id = (long) session.getAttribute("id");
-        String oldPassword = request.getParameter("oldPassword");
-        String newPassword = request.getParameter("newPassword");
-        User user = null;
-        try {
-            user = userService.changePassword(id, oldPassword, newPassword);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("更改成功", 200, new UserResponse(user)));
+
+        User user = userService.changePassword(
+                userId,
+                request.getParameter("oldPassword"),
+                request.getParameter("newPassword")
+        );
+        writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
     }
 
-    private void recharge(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void recharge(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long id = (long) session.getAttribute("id");
+
         double amount = Double.parseDouble(request.getParameter("amount"));
-        User user = new User();
-        try {
-            user = userService.recharge(id, amount);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<UserResponse>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("充值成功", 200, new UserResponse(user)));
+        User user = userService.recharge(userId, amount);
+        writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
     }
 
-    private void follow(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void follow(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long followerId = (long) session.getAttribute("id");
+
         long followedId = Long.parseLong(request.getParameter("followedId"));
-        try {
-            followService.add(followerId, followedId);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
-        }
-        writeJson(response, new Response<>("关注成功", 200, null));
+        followService.add(userId, followedId);
+        writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void unfollow(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            writeJson(response, new Response<>("未登录", 401, null));
+    private void unfollow(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        if (userId == null) {
             return;
         }
-        long followerId = (long) session.getAttribute("id");
+
         long followedId = Long.parseLong(request.getParameter("followedId"));
-        try {
-            followService.delete(followerId, followedId);
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-            return;
+        followService.delete(userId, followedId);
+        writeJson(response, new Response<>("ok", 200, null));
+    }
+
+    private Long getLoginUserId(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("id") == null) {
+            writeJson(response, new Response<>("Not logged in", 401, null));
+            return null;
         }
-        writeJson(response, new Response<>("取关成功", 200, null));
+
+        Object value = session.getAttribute("id");
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        }
+
+        writeJson(response, new Response<>("Invalid session", 401, null));
+        return null;
     }
 }
