@@ -109,6 +109,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             items = itemService.findBySeller(userId);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("获取我的商品成功", 200, ItemResponse.dto(items)));
     }
@@ -125,6 +126,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             items = itemService.recommend(userId);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("获取推荐商品成功", 200, ItemResponse.dto(items)));
     }
@@ -141,6 +143,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             item = itemService.findById(id);
         } catch (Exception e) {
             writeJson(response, new Response<>(e.getMessage(), 401, null));
+            return;
         }
         writeJson(response, new Response<>("获取商品详情成功", 200, item));
 
@@ -153,6 +156,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             items = itemService.search(keyword);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("获取推荐商品成功", 200, ItemResponse.dto(items)));
     }
@@ -169,6 +173,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             items=favoriteService.getMyFavorite(userId);
         }catch (ServiceException e){
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("获取我的收藏成功", 200, ItemResponse.dto(items)));
     }
@@ -180,6 +185,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             comments=commentService.findByItemId(id);
         } catch (Exception e) {
             writeJson(response, new Response<>(e.getMessage(), 401, null));
+            return;
         }
         writeJson(response, new Response<>("获取商品评论成功", 200, CommentResponse.dto(comments)));
     }
@@ -200,7 +206,9 @@ public class ItemController extends HttpServlet implements JsonUtil {
             itemService.add(userId, title, description, price, coverImage);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
+        writeJson(response,new Response<>("发布成功",200,null));
     }
 
     private void edit(HttpServletRequest request, HttpServletResponse response) {
@@ -215,6 +223,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             itemService.edit(id, title, description, price, stock, status, coverImage);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("编辑商品成功", 200, null));
     }
@@ -231,6 +240,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             itemService.delete(userId,id);
         } catch (Exception e) {
             writeJson(response, new Response<>(e.getMessage(), 401, null));
+            return;
         }
         writeJson(response, new Response<>("删除商品成功", 200, null));
     }
@@ -247,6 +257,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             favoriteService.add(userId, itemId);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("收藏商品成功", 200, null));
     }
@@ -263,6 +274,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             favoriteService.remove(userId, itemId);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("取消收藏商品成功", 200, null));
     }
@@ -280,6 +292,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             commentService.add(itemId,userId,content);
         }catch (ServiceException e){
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("添加评论成功", 200, null));
     }
@@ -296,6 +309,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
             commentService.delete(userId,id);
         }catch (ServiceException e){
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("删除评论成功", 200, null));
     }
