@@ -1,8 +1,6 @@
 package controller;
 
 import bean.Response;
-import com.google.gson.Gson;
-import enums.OrderStatus;
 import exception.ServiceException;
 import service.OrderService;
 import util.JsonUtil;
@@ -16,7 +14,6 @@ import javax.servlet.http.HttpSession;
 @WebServlet("/orders/*")
 public class OrderController extends HttpServlet implements JsonUtil {
     private final OrderService orderService = new OrderService();
-    private final Gson gson = new Gson();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
@@ -55,6 +52,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
                 break;
             case "/cancel":
                 cancel(request,response);
+                break;
             default:
                 writeJson(response, new Response<>("无法识别path", 401, null));
         }
