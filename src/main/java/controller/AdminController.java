@@ -44,9 +44,7 @@ public class AdminController extends HttpServlet implements JsonUtil {
                 default:
                     writeJson(response, new Response<>("不支持的 POST 操作: " + path, 404, null));
             }
-        } catch (NumberFormatException e) {
-            writeJson(response, new Response<>("参数格式错误", 400, null));
-        } catch (Exception e) {
+        }catch (Exception e) {
             e.printStackTrace();
             writeJson(response, new Response<>(e.getMessage(), 500, null));
         }
