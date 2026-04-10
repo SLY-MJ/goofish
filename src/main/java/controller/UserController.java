@@ -114,6 +114,7 @@ public class UserController extends HttpServlet implements JsonUtil {
             user = userService.getUserById(id);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("获取用户信息成功", 200, new UserResponse(user)));
     }
@@ -130,6 +131,7 @@ public class UserController extends HttpServlet implements JsonUtil {
             follows = followService.getFollows(id);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("获取成功", 200, UserResponse.dto(follows)));
     }
@@ -146,6 +148,7 @@ public class UserController extends HttpServlet implements JsonUtil {
             fans = followService.getFans(id);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("获取粉丝成功", 200, UserResponse.dto(fans)));
     }
@@ -157,6 +160,7 @@ public class UserController extends HttpServlet implements JsonUtil {
             users = userService.search(username);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("搜索成功", 200, UserResponse.dto(users)));
     }
@@ -231,6 +235,7 @@ public class UserController extends HttpServlet implements JsonUtil {
             user = userService.changePassword(id, oldPassword, newPassword);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("更改成功", 200, new UserResponse(user)));
     }
@@ -248,6 +253,7 @@ public class UserController extends HttpServlet implements JsonUtil {
             user = userService.recharge(id, amount);
         } catch (ServiceException e) {
             writeJson(response, new Response<UserResponse>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("充值成功", 200, new UserResponse(user)));
     }
@@ -281,6 +287,7 @@ public class UserController extends HttpServlet implements JsonUtil {
             followService.delete(followerId, followedId);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response, new Response<>("取关成功", 200, null));
     }
