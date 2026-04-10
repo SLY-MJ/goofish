@@ -94,6 +94,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
             orderService.add(itemId, buyerId, sellerId);
         } catch (ServiceException e) {
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response,new Response<>("订单创建成功",200,null));
     }
@@ -104,6 +105,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
             orderService.delete(itemId);
         }catch (ServiceException e){
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response,new Response<>("订单删除成功",200,null));
     }
@@ -114,6 +116,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
             orderService.trade(orderId);
         }catch (ServiceException e){
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response,new Response<>("订单支付成功",200,null));
     }
@@ -124,6 +127,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
             orderService.cancel(orderId);
         }catch (ServiceException e){
             writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
+            return;
         }
         writeJson(response,new Response<>("订单取消成功",200,null));
     }
