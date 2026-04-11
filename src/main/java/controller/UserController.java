@@ -40,6 +40,9 @@ public class UserController extends HttpServlet implements JsonUtil {
                 case "/fans":
                     getFans(request, response);
                     break;
+                case "/detail":
+                    getDetail(request, response);
+                    break;
                 case "/search":
                     search(request, response);
                     break;
@@ -106,6 +109,12 @@ public class UserController extends HttpServlet implements JsonUtil {
             return;
         }
 
+        User user = userService.getUserById(userId);
+        writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
+    }
+
+    private void getDetail(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        long userId = Long.parseLong(request.getParameter("id"));
         User user = userService.getUserById(userId);
         writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
     }

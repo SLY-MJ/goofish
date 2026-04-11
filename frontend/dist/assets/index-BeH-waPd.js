@@ -8290,6 +8290,9 @@ function Ip(e) {
 function Dp(e) {
   return te({ url: "/user/recharge", method: "post", params: { amount: e } });
 }
+function getUserDetail(e) {
+  return te({ url: "/user/detail", method: "get", params: { id: e } });
+}
 function Lp(e) {
   return te({ url: "/user/search", method: "get", params: { username: e } });
 }
@@ -8482,7 +8485,9 @@ const Jt = Ba("auth", {
         zt(async () => {
           await t.bootstrap();
         }),
-        (n, s) => (q(), W("div", Wp, [Ce(Kp), g("main", Gp, [Ce(Pe(Bl))])]))
+        (n, s) =>
+          (q(),
+          W("div", Wp, [Ce(Kp), g("main", Gp, [Ce(Pe(Bl), { key: n.$route.fullPath })])]))
       );
     },
   };
@@ -8860,6 +8865,7 @@ const Uh = { key: 0, class: "card" },
     setup(e) {
       const t = e,
         n = Jt(),
+        d = kr(),
         s = ie(null),
         r = ie([]),
         o = ie(""),
@@ -8921,10 +8927,17 @@ const Uh = { key: 0, class: "card" },
         try {
           await Xp(s.value.id),
             (i.value = "\u5546\u54c1\u5220\u9664\u6210\u529f"),
-            (window.location.href = "/");
+            await d.push("/");
         } catch (m) {
           i.value = m.message;
         }
+      }
+      function R(m, y) {
+        m &&
+          d.push({
+            path: "/users/" + m,
+            query: { username: y || "" },
+          });
       }
       async function f() {
         if (s.value)
@@ -8969,7 +8982,21 @@ const Uh = { key: 0, class: "card" },
                     g("h1", Mh, Q(s.value.title), 1),
                     g("p", null, Q(s.value.description), 1),
                     g("p", kh, "价格: " + Q(s.value.price), 1),
-                    g("p", Bh, "??: " + Q(s.value.sellerUsername || s.value.sellerId), 1),
+                    g("div", { class: "row", style: { gap: "8px", "align-items": "center" } }, [
+                      y[2] ||
+                        (y[2] = g("span", { class: "muted" }, "\u5356\u5bb6:", -1)),
+                      g(
+                        "button",
+                        {
+                          class: "user-link",
+                          onClick: (w) =>
+                            R(s.value.sellerId, s.value.sellerUsername),
+                        },
+                        Q(s.value.sellerUsername || s.value.sellerId),
+                        9,
+                        hm,
+                      ),
+                    ]),
                     Pe(n).isLoggedIn
                       ? (q(),
                         W("div", jh, [
@@ -9069,7 +9096,20 @@ const Uh = { key: 0, class: "card" },
                               },
                             },
                             [
-                              g("p", qh, "??: " + Q(w.username || w.userId), 1),
+                              g("div", { class: "row", style: { gap: "8px", "align-items": "center" } }, [
+                                y[3] ||
+                                  (y[3] = g("span", { class: "muted" }, "\u7528\u6237:", -1)),
+                                g(
+                                  "button",
+                                  {
+                                    class: "user-link",
+                                    onClick: (I) => R(w.userId, w.username),
+                                  },
+                                  Q(w.username || w.userId),
+                                  9,
+                                  hm,
+                                ),
+                              ]),
                               Pe(n).isLoggedIn &&
                               (Pe(n).isAdmin ||
                                 (Pe(n).user &&
@@ -9715,6 +9755,7 @@ const Uh = { key: 0, class: "card" },
     __name: "ProfileView",
     setup(e) {
       const t = Jt(),
+        v = kr(),
         n = ie(""),
         s = Pt({ username: "", email: "", phone: "", information: "" }),
         r = ie([]),
@@ -9783,6 +9824,33 @@ const Uh = { key: 0, class: "card" },
           n.value = C.message;
         }
       }
+      function L(C) {
+        C && C.id && v.push("/users/" + C.id);
+      }
+      async function D() {
+        const C = new URLSearchParams(window.location.search),
+          j = C.get("username"),
+          k = C.get("userId");
+        if (!j && !k) return;
+        try {
+          const z = j ? await Lp(j) : [];
+          let O =
+            Array.isArray(z) &&
+            z.find(
+              (A) =>
+                (!k || String(A.id) === String(k)) &&
+                (!j || String(A.username) === String(j)),
+            );
+          !O &&
+            k &&
+            t.user &&
+            String(t.user.id) === String(k) &&
+            (O = t.user);
+          O && (await x(O));
+        } catch (z) {
+          n.value = z.message;
+        }
+      }
       return (
         zt(async () => {
           var C, j;
@@ -9791,7 +9859,8 @@ const Uh = { key: 0, class: "card" },
               (s.username = ((C = t.user) == null ? void 0 : C.username) || ""),
               (s.information =
                 ((j = t.user) == null ? void 0 : j.information) || ""),
-              await m());
+              await m(),
+              await D());
           } catch (k) {
             n.value = k.message;
           }
@@ -9991,7 +10060,7 @@ const Uh = { key: 0, class: "card" },
                               "button",
                               {
                                 class: "btn btn-outline",
-                                onClick: (B) => x(A),
+                                onClick: (B) => L(A),
                               },
                               "\u67e5\u770b\u7528\u6237",
                               8,
@@ -10032,7 +10101,7 @@ const Uh = { key: 0, class: "card" },
                                 "button",
                                 {
                                   class: "btn btn-outline",
-                                  onClick: (B) => x(A),
+                                  onClick: (B) => L(A),
                                 },
                                 "\u67e5\u770b\u8be6\u60c5",
                                 8,
@@ -10072,7 +10141,7 @@ const Uh = { key: 0, class: "card" },
                                 "button",
                                 {
                                   class: "btn btn-outline",
-                                  onClick: (B) => x(A),
+                                  onClick: (B) => L(A),
                                 },
                                 "\u67e5\u770b\u8be6\u60c5",
                                 8,
@@ -10191,7 +10260,7 @@ const Uh = { key: 0, class: "card" },
                       W(
                         "p",
                         udn,
-                        "\u8bf7\u5148\u4ece\u5173\u6ce8\u3001\u7c89\u4e1d\u6216\u641c\u7d22\u7ed3\u679c\u4e2d\u9009\u62e9\u4e00\u4e2a\u7528\u6237\u3002",
+                        "\u8bf7\u901a\u8fc7\u201c\u67e5\u770b\u7528\u6237/\u67e5\u770b\u8be6\u60c5\u201d\u8df3\u8f6c\u5230\u72ec\u7acb\u7528\u6237\u4e3b\u9875\u3002",
                       )),
                 ]),
                 g("section", Hm, [
@@ -10221,6 +10290,129 @@ const Uh = { key: 0, class: "card" },
             )
           );
         }
+      );
+    },
+  },
+  rdm = { class: "card" },
+  rdn = { key: 0, class: "error" },
+  rdo = { class: "card" },
+  rdp = { key: 0, class: "muted" },
+  rdq = { key: 1, class: "muted" },
+  rdr = {
+    __name: "UserDetailView",
+    props: { id: { type: [String, Number], required: !0 } },
+    setup(e) {
+      const t = e,
+        n = Jt(),
+        s = kr(),
+        r = ie(null),
+        o = ie([]),
+        i = ie(""),
+        l = ie(!1);
+      async function c() {
+        ((i.value = ""), (l.value = !0));
+        try {
+          const [u, f] = await Promise.all([getUserDetail(t.id), getItemsBySellerId(t.id)]);
+          ((r.value = u), (o.value = f));
+        } catch (u) {
+          ((i.value = u.message), (o.value = []));
+        } finally {
+          l.value = !1;
+        }
+      }
+      async function a() {
+        if (!r.value || !n.isAdmin) return;
+        try {
+          (await Qp(r.value.id),
+            (i.value = "\u7528\u6237\u5220\u9664\u6210\u529f"),
+            await s.push("/"));
+        } catch (u) {
+          i.value = u.message;
+        }
+      }
+      return (
+        zt(c),
+        (u, f) => (
+          q(),
+          W(
+            de,
+            null,
+            [
+              r.value
+                ? (q(),
+                  W("section", rdm, [
+                    f[0] || (f[0] = g("h1", { class: "title" }, "\u7528\u6237\u4e3b\u9875", -1)),
+                    g("p", null, "ID: " + Q(r.value.id), 1),
+                    g("p", null, "\u7528\u6237\u540d: " + Q(r.value.username), 1),
+                    g("p", null, "\u89d2\u8272: " + Q(r.value.role), 1),
+                    g("p", null, "\u7b80\u4ecb: " + Q(r.value.information || "-"), 1),
+                    Pe(n).isAdmin
+                      ? (q(),
+                        W(
+                          "button",
+                          { key: 0, class: "btn btn-outline", onClick: a },
+                          "\u5220\u9664\u7528\u6237",
+                        ))
+                      : Ye("", !0),
+                    i.value ? (q(), W("p", rdn, Q(i.value), 1)) : Ye("", !0),
+                  ]))
+                : Ye("", !0),
+              g("section", rdo, [
+                f[1] ||
+                  (f[1] = g(
+                    "h2",
+                    { class: "title", style: { "font-size": "18px" } },
+                    "\u4ed6\u7684\u5546\u54c1",
+                    -1,
+                  )),
+                l.value
+                  ? (q(),
+                    W("p", rdp, "\u6b63\u5728\u52a0\u8f7d\u7528\u6237\u4fe1\u606f..."))
+                  : Ye("", !0),
+                !l.value && !o.value.length
+                  ? (q(), W("p", rdq, "\u6682\u65e0\u5546\u54c1"))
+                  : Ye("", !0),
+                (q(!0),
+                W(
+                  de,
+                  null,
+                  bt(
+                    o.value,
+                    (h) => (
+                      q(),
+                      W(
+                        "div",
+                        {
+                          key: h.id,
+                          class: "row",
+                          style: {
+                            "justify-content": "space-between",
+                            margin: "6px 0",
+                          },
+                        },
+                        [
+                          g("span", null, Q(h.title) + " - " + Q(h.price), 1),
+                          g(
+                            "button",
+                            {
+                              class: "btn btn-outline",
+                              onClick: (_) => u.$router.push("/items/" + h.id),
+                            },
+                            "\u67e5\u770b\u5546\u54c1",
+                            8,
+                            hm,
+                          ),
+                        ],
+                      )
+                    ),
+                  ),
+                  128,
+                )),
+              ]),
+            ],
+            64,
+          )
+        )
       );
     },
   },
@@ -10298,6 +10490,7 @@ const Uh = { key: 0, class: "card" },
     { path: "/login", name: "login", component: Xh },
     { path: "/register", name: "register", component: Qm },
     { path: "/items/:id", name: "item-detail", component: Kh, props: !0 },
+    { path: "/users/:id", name: "user-detail", component: rdr, props: !0 },
     {
       path: "/my-items",
       name: "my-items",
