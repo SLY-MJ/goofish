@@ -1,10 +1,13 @@
 package controller;
 
 import bean.CommentResponse;
+import bean.ItemDetailResponse;
 import bean.ItemResponse;
 import bean.Response;
+import dao.UserDao;
 import entity.Comment;
 import entity.Item;
+import entity.User;
 import exception.ServiceException;
 import service.CommentService;
 import service.FavoriteService;
@@ -23,6 +26,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
     private final ItemService itemService = new ItemService();
     private final FavoriteService favoriteService = new FavoriteService();
     private final CommentService commentService = new CommentService();
+    private final UserDao userDao = new UserDao();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
@@ -128,7 +132,12 @@ public class ItemController extends HttpServlet implements JsonUtil {
         long id = Long.parseLong(request.getParameter("id"));
         itemService.increaseViewCount(id);
         Item item = itemService.findById(id);
-        writeJson(response, new Response<>("ok", 200, item));
+        try {
+            User seller = item == null ? null : userDao.findById(item.getSellerId());
+            writeJson(response, new Response<>("ok", 200, ItemDetailResponse.dto(item, seller)));
+        } catch (Exception e) {
+            throw new ServiceException(500, e.getMessage());
+        }
     }
 
     private void search(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
@@ -155,7 +164,16 @@ public class ItemController extends HttpServlet implements JsonUtil {
     private void getComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         long id = Long.parseLong(request.getParameter("id"));
         List<Comment> comments = commentService.findByItemId(id);
-        writeJson(response, new Response<>("ok", 200, CommentResponse.dto(comments)));
+        try {
+            List<CommentResponse> responseList = new java.util.ArrayList<>();
+            for (Comment comment : comments) {
+                User user = userDao.findById(comment.getUserId());
+                responseList.add(CommentResponse.dto(comment, user == null ? null : user.getUsername()));
+            }
+            writeJson(response, new Response<>("ok", 200, responseList));
+        } catch (Exception e) {
+            throw new ServiceException(500, e.getMessage());
+        }
     }
 
     private void publish(HttpServletRequest request, HttpServletResponse response) throws ServiceException {

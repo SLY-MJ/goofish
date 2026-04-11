@@ -8,15 +8,20 @@ import java.util.List;
 public class CommentResponse {
     private long id;
     private String userId;
+    private String username;
     private String commentId;
     private String comment;
 
     public static CommentResponse dto(Comment comment) {
+        return dto(comment, null);
+    }
+
+    public static CommentResponse dto(Comment comment, String username) {
         if (comment == null) {
             return null;
         }
         return new CommentResponse(comment.getId(), String.valueOf(comment.getUserId()),
-                String.valueOf(comment.getItemId()), comment.getComment());
+                username, String.valueOf(comment.getItemId()), comment.getComment());
     }
 
     public static List<CommentResponse> dto(List<Comment> comments) {
@@ -33,9 +38,10 @@ public class CommentResponse {
     public CommentResponse() {
     }
 
-    public CommentResponse(long id, String userId, String commentId, String comment) {
+    public CommentResponse(long id, String userId, String username, String commentId, String comment) {
         this.id = id;
         this.userId = userId;
+        this.username = username;
         this.commentId = commentId;
         this.comment = comment;
     }
@@ -54,6 +60,14 @@ public class CommentResponse {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getCommentId() {
