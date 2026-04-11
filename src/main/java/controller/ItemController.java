@@ -46,6 +46,9 @@ public class ItemController extends HttpServlet implements JsonUtil {
                 case "/search":
                     search(request, response);
                     break;
+                case "/seller":
+                    getBySeller(request, response);
+                    break;
                 case "/favorite":
                     getMyFavorite(request, response);
                     break;
@@ -130,6 +133,12 @@ public class ItemController extends HttpServlet implements JsonUtil {
 
     private void search(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         List<Item> items = itemService.search(request.getParameter("keyword"));
+        writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
+    }
+
+    private void getBySeller(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        long sellerId = Long.parseLong(request.getParameter("sellerId"));
+        List<Item> items = itemService.findBySeller(sellerId);
         writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
