@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
+//过滤器
 @WebFilter("/*")
 public class AppFilter implements Filter {
     private static final Set<String> ALLOWED_ORIGINS = Set.of(
@@ -45,15 +46,18 @@ public class AppFilter implements Filter {
             request.getRequestDispatcher("/index.html").forward(request, response);
             return;
         }
-
+        //放行给controller
         chain.doFilter(servletRequest, servletResponse);
     }
 
     private void applyCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
+        //获得请求头 检验是否是允许的
         String origin = request.getHeader("Origin");
         if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
+            //表示允许哪个前端地址来访问
             response.setHeader("Access-Control-Allow-Origin", origin);
             response.setHeader("Vary", "Origin");
+            //允许带cookie 这样才能获得session
             response.setHeader("Access-Control-Allow-Credentials", "true");
         }
         response.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
