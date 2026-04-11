@@ -8909,11 +8909,21 @@ const Uh = { key: 0, class: "card" },
       }
       async function p(m) {
         try {
-          (await deleteItemComment(m),
+          (await (n.isAdmin ? Yp(m) : deleteItemComment(m)),
             (i.value = "\u5220\u9664\u8bc4\u8bba\u6210\u529f"),
             await l());
         } catch (y) {
           i.value = y.message;
+        }
+      }
+      async function T() {
+        if (!s.value) return;
+        try {
+          await Xp(s.value.id),
+            (i.value = "\u5546\u54c1\u5220\u9664\u6210\u529f"),
+            (window.location.href = "/");
+        } catch (m) {
+          i.value = m.message;
         }
       }
       async function f() {
@@ -8989,6 +8999,14 @@ const Uh = { key: 0, class: "card" },
                                 { class: "btn", onClick: f },
                                 "\u5173\u6ce8\u5356\u5bb6",
                               )),
+                          Pe(n).isAdmin
+                            ? (q(),
+                              W(
+                                "button",
+                                { class: "btn btn-outline", onClick: T },
+                                "\u5220\u9664\u5546\u54c1",
+                              ))
+                            : Ye("", !0),
                           g("button", { class: "btn", onClick: _ }, "\u7acb\u5373\u4e0b\u5355"),
                         ]))
                       : Ye("", !0),
@@ -9053,8 +9071,9 @@ const Uh = { key: 0, class: "card" },
                             [
                               g("p", qh, "??: " + Q(w.username || w.userId), 1),
                               Pe(n).isLoggedIn &&
-                              Pe(n).user &&
-                              String(Pe(n).user.id) === String(w.userId)
+                              (Pe(n).isAdmin ||
+                                (Pe(n).user &&
+                                  String(Pe(n).user.id) === String(w.userId)))
                                 ? (q(),
                                   W(
                                     "button",
@@ -9748,6 +9767,22 @@ const Uh = { key: 0, class: "card" },
           _.value = !1;
         }
       }
+      async function N() {
+        if (!u.value || !u.value.id) return;
+        try {
+          await Qp(u.value.id),
+            (n.value = "\u7528\u6237\u5220\u9664\u6210\u529f"),
+            (a.value = a.value.filter((C) => String(C.id) !== String(u.value.id))),
+            (r.value = r.value.filter((C) => String(C.id) !== String(u.value.id))),
+            (o.value = o.value.filter((C) => String(C.id) !== String(u.value.id))),
+            (u.value = null),
+            (f.value = []),
+            (h.value = ""),
+            await m();
+        } catch (C) {
+          n.value = C.message;
+        }
+      }
       return (
         zt(async () => {
           var C, j;
@@ -10084,6 +10119,18 @@ const Uh = { key: 0, class: "card" },
                             "\u7b80\u4ecb: " + Q(u.value.information || "-"),
                             1,
                           ),
+                          Pe(t).isAdmin
+                            ? (q(),
+                              W(
+                                "button",
+                                {
+                                  key: 1,
+                                  class: "btn btn-outline",
+                                  onClick: N,
+                                },
+                                "\u5220\u9664\u7528\u6237",
+                              ))
+                            : Ye("", !0),
                           _.value
                             ? (q(),
                               W(
