@@ -21,6 +21,9 @@ public class FavoriteService implements FavoriteServiceImp {
         }
 
         try {
+            if (favoriteDao.exists(userId, itemId)) {
+                return;
+            }
             favoriteDao.add(userId, itemId);
         } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
@@ -34,6 +37,9 @@ public class FavoriteService implements FavoriteServiceImp {
         }
 
         try {
+            if (!favoriteDao.exists(userId, itemId)) {
+                return;
+            }
             favoriteDao.delete(userId, itemId);
         } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());

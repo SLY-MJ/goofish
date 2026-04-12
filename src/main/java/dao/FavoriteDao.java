@@ -40,6 +40,17 @@ public class FavoriteDao {
         }
     }
 
+    public boolean exists(long userId, long itemId) throws Exception {
+        String sql = "select 1 from favorites where user_id=? and item_id=? limit 1";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setLong(1, userId);
+            ps.setLong(2, itemId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        }
+    }
+
     private Favorite getFavorite(ResultSet rs) throws Exception {
         return new Favorite(
                 rs.getLong("id"),

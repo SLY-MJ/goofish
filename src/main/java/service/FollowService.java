@@ -23,6 +23,9 @@ public class FollowService {
         }
 
         try {
+            if (followDao.exists(followerId, followedId)) {
+                return -1;
+            }
             return followDao.add(followerId, followedId);
         } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
@@ -35,6 +38,9 @@ public class FollowService {
         }
 
         try {
+            if (!followDao.exists(followerId, followedId)) {
+                return true;
+            }
             followDao.deleteByFollowerAndFollowed(followerId, followedId);
             return true;
         } catch (Exception e) {
