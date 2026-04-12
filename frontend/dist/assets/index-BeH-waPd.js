@@ -8875,6 +8875,7 @@ const Uh = { key: 0, class: "card" },
       async function l() {
         i.value = "";
         try {
+          n.inited || (await n.bootstrap());
           if (((s.value = await dh(t.id)), (r.value = await vh(t.id)), n.isLoggedIn)) {
             const [m, y] = await Promise.all([
               _h().catch(() => []),
@@ -8892,7 +8893,7 @@ const Uh = { key: 0, class: "card" },
       }
       async function c() {
         try {
-          (await yh(t.id), (E.value = !0), (i.value = "\u6536\u85cf\u6210\u529f"));
+          (await yh(t.id), (E.value = !0), (i.value = "\u6536\u85cf\u6210\u529f"), await l());
         } catch (m) {
           i.value = m.message;
         }
@@ -8901,7 +8902,8 @@ const Uh = { key: 0, class: "card" },
         try {
           (await bh(t.id),
             (E.value = !1),
-            (i.value = "\u53d6\u6d88\u6536\u85cf\u6210\u529f"));
+            (i.value = "\u53d6\u6d88\u6536\u85cf\u6210\u529f"),
+            await l());
         } catch (m) {
           i.value = m.message;
         }
@@ -8944,7 +8946,8 @@ const Uh = { key: 0, class: "card" },
           try {
             (await Mp(s.value.sellerId),
               (S.value = !0),
-              (i.value = "\u5173\u6ce8\u6210\u529f"));
+              (i.value = "\u5173\u6ce8\u6210\u529f"),
+              await l());
           } catch (m) {
             i.value = m.message;
           }
@@ -8954,7 +8957,8 @@ const Uh = { key: 0, class: "card" },
           try {
             (await kp(s.value.sellerId),
               (S.value = !1),
-              (i.value = "\u53d6\u6d88\u5173\u6ce8\u6210\u529f"));
+              (i.value = "\u53d6\u6d88\u5173\u6ce8\u6210\u529f"),
+              await l());
           } catch (m) {
             i.value = m.message;
           }
@@ -9000,32 +9004,26 @@ const Uh = { key: 0, class: "card" },
                     Pe(n).isLoggedIn
                       ? (q(),
                         W("div", jh, [
-                           E.value
-                            ? (q(),
-                              W(
-                                "button",
-                                { class: "btn btn-outline", onClick: a },
-                                "\u53d6\u6d88\u6536\u85cf",
-                              ))
-                            : (q(),
-                              W(
-                                "button",
-                                { class: "btn", onClick: c },
-                                "\u6536\u85cf",
-                              )),
-                          S.value
-                            ? (q(),
-                              W(
-                                "button",
-                                { class: "btn btn-outline", onClick: h },
-                                "\u53d6\u6d88\u5173\u6ce8",
-                              ))
-                            : (q(),
-                              W(
-                                "button",
-                                { class: "btn", onClick: f },
-                                "\u5173\u6ce8\u5356\u5bb6",
-                              )),
+                          g(
+                            "button",
+                            {
+                              class: E.value ? "btn btn-outline" : "btn",
+                              onClick: E.value ? a : c,
+                            },
+                            Q(E.value ? "\u53d6\u6d88\u6536\u85cf" : "\u6536\u85cf"),
+                            11,
+                            hm,
+                          ),
+                          g(
+                            "button",
+                            {
+                              class: S.value ? "btn btn-outline" : "btn",
+                              onClick: S.value ? h : f,
+                            },
+                            Q(S.value ? "\u53d6\u6d88\u5173\u6ce8" : "\u5173\u6ce8\u5356\u5bb6"),
+                            11,
+                            hm,
+                          ),
                           Pe(n).isAdmin
                             ? (q(),
                               W(
@@ -9859,8 +9857,7 @@ const Uh = { key: 0, class: "card" },
               (s.username = ((C = t.user) == null ? void 0 : C.username) || ""),
               (s.information =
                 ((j = t.user) == null ? void 0 : j.information) || ""),
-              await m(),
-              await D());
+              await m());
           } catch (k) {
             n.value = k.message;
           }
@@ -10155,114 +10152,6 @@ const Uh = { key: 0, class: "card" },
                     )),
                   ]),
                 ]),
-                g("section", udm, [
-                  j[17] ||
-                    (j[17] = g(
-                      "h3",
-                      null,
-                      "\u7528\u6237\u8be6\u60c5",
-                      -1,
-                    )),
-                  u.value
-                    ? (q(),
-                      W(
-                        de,
-                        { key: 0 },
-                        [
-                          g("p", null, "ID: " + Q(u.value.id), 1),
-                          g(
-                            "p",
-                            null,
-                            "\u7528\u6237\u540d: " + Q(u.value.username),
-                            1,
-                          ),
-                          g(
-                            "p",
-                            null,
-                            "\u89d2\u8272: " + Q(u.value.role),
-                            1,
-                          ),
-                          g(
-                            "p",
-                            null,
-                            "\u7b80\u4ecb: " + Q(u.value.information || "-"),
-                            1,
-                          ),
-                          Pe(t).isAdmin
-                            ? (q(),
-                              W(
-                                "button",
-                                {
-                                  key: 1,
-                                  class: "btn btn-outline",
-                                  onClick: N,
-                                },
-                                "\u5220\u9664\u7528\u6237",
-                              ))
-                            : Ye("", !0),
-                          _.value
-                            ? (q(),
-                              W(
-                                "p",
-                                udn,
-                                "\u6b63\u5728\u52a0\u8f7d\u8be5\u7528\u6237\u7684\u5546\u54c1...",
-                              ))
-                            : Ye("", !0),
-                          h.value
-                            ? (q(), W("p", Tm, Q(h.value), 1))
-                            : Ye("", !0),
-                          (q(!0),
-                          W(
-                            de,
-                            null,
-                            bt(
-                              f.value,
-                              (A) => (
-                                q(),
-                                W(
-                                  "div",
-                                  {
-                                    key: A.id,
-                                    class: "row",
-                                    style: {
-                                      "justify-content": "space-between",
-                                      margin: "6px 0",
-                                    },
-                                  },
-                                  [
-                                    g(
-                                      "span",
-                                      null,
-                                      Q(A.title) + " - " + Q(A.price),
-                                      1,
-                                    ),
-                                    g(
-                                      "button",
-                                      {
-                                        class: "btn btn-outline",
-                                        onClick: (B) =>
-                                          C.$router.push("/items/" + A.id),
-                                      },
-                                      "\u67e5\u770b\u5546\u54c1",
-                                      8,
-                                      hm,
-                                    ),
-                                  ],
-                                )
-                              ),
-                            ),
-                            128,
-                          )),
-                        ],
-                        64,
-                      ))
-                    : (q(),
-                      W(
-                        "p",
-                        udn,
-                        "\u8bf7\u901a\u8fc7\u201c\u67e5\u770b\u7528\u6237/\u67e5\u770b\u8be6\u60c5\u201d\u8df3\u8f6c\u5230\u72ec\u7acb\u7528\u6237\u4e3b\u9875\u3002",
-                      )),
-                ]),
                 g("section", Hm, [
                   j[16] ||
                     (j[16] = g("h3", null, "\u6211\u7684\u6536\u85cf", -1)),
@@ -10312,10 +10201,16 @@ const Uh = { key: 0, class: "card" },
       async function c() {
         ((i.value = ""), (l.value = !0));
         try {
-          const [u, f] = await Promise.all([getUserDetail(t.id), getItemsBySellerId(t.id)]);
-          ((r.value = u), (o.value = f));
+          const u = await getUserDetail(t.id);
+          let f = [];
+          try {
+            f = await getItemsBySellerId(t.id);
+          } catch (h) {
+            i.value = h.message;
+          }
+          ((r.value = u), (o.value = Array.isArray(f) ? f : []));
         } catch (u) {
-          ((i.value = u.message), (o.value = []));
+          ((i.value = u.message), (r.value = null), (o.value = []));
         } finally {
           l.value = !1;
         }
@@ -10338,6 +10233,7 @@ const Uh = { key: 0, class: "card" },
             de,
             null,
             [
+              !r.value && i.value ? (q(), W("p", rdn, Q(i.value), 1)) : Ye("", !0),
               r.value
                 ? (q(),
                   W("section", rdm, [
