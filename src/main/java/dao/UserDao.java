@@ -30,7 +30,7 @@ public class UserDao {
     }
 
     public boolean delete(long id) throws SQLException {
-        String sql = "delete from users where id=?";
+        String sql = "update users set status =0 where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, id);
