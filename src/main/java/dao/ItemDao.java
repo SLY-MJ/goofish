@@ -34,7 +34,7 @@ public class ItemDao {
     }
 
     public boolean delete(long id) throws SQLException {
-        String sql = "delete from items where id=?";
+        String sql = "update items set is_deleted=1 where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, id);
@@ -216,7 +216,7 @@ public class ItemDao {
                 ItemStatus.valueOf(rs.getString("status")),
                 rs.getString("cover_image"),
                 rs.getInt("view_count"),
-                rs.getBoolean("is_deleted"),
+                rs.getInt("is_deleted")==1,//0没被删 1是被删了
                 rs.getString("created_at"),
                 rs.getString("updated_at")
         );

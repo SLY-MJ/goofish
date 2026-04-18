@@ -28,7 +28,7 @@ public class CommentDao {
     }
 
     public boolean delete(long id) throws SQLException {
-        String sql = "delete from comments where id=?";
+        String sql = "update comments set is_deleted=1 where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, id);
