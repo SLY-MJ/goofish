@@ -4,8 +4,10 @@ import dao.ItemDao;
 import entity.Item;
 import enums.ItemStatus;
 import exception.ServiceException;
+import implement.ItemServiceImp;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ItemService implements ItemServiceImp {
@@ -41,7 +43,7 @@ public class ItemService implements ItemServiceImp {
     public void delete(long userId, long itemId) throws ServiceException {
         try {
             Item item = itemDao.findById(itemId);
-            if (item == null) {
+            if (item == null || isDeleted(item)) {
                 throw new ServiceException(404, "Item not found");
             }
             if (item.getSellerId() != userId) {
@@ -106,7 +108,7 @@ public class ItemService implements ItemServiceImp {
     @Override
     public List<Item> findBySeller(long sellerId) throws ServiceException {
         try {
-            return itemDao.findBySellerId(sellerId);
+            return getItems(itemDao.findBySellerId(sellerId));
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -115,7 +117,7 @@ public class ItemService implements ItemServiceImp {
     @Override
     public List<Item> findByStatus(ItemStatus status) throws ServiceException {
         try {
-            return itemDao.findByStatus(status);
+            return getItems(itemDao.findByStatus(status));
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -128,7 +130,7 @@ public class ItemService implements ItemServiceImp {
         }
 
         try {
-            return itemDao.findByTitle(keyword.trim());
+            return getItems(itemDao.findByTitle(keyword.trim()));
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -137,7 +139,7 @@ public class ItemService implements ItemServiceImp {
     @Override
     public List<Item> recommend(Long userId) throws ServiceException {
         try {
-            return itemDao.findRandomItem(10, userId);
+            return getItems(itemDao.findRandomItem(10, userId));
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -149,5 +151,25 @@ public class ItemService implements ItemServiceImp {
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
+    }
+
+    private boolean isDeleted(Item item) {
+        return item.isDeleted();
+    }
+
+    private List<Item> getItems(List<Item> items) throws ServiceException {
+        if (items == null) {
+            throw new ServiceException(400, "Items list is null");
+        }
+        List<Item> list = new ArrayList<>();
+        for (Item item : items) {
+            if (!isDeleted(item)) {
+                list.add(item);
+            }
+        }
+        if (list.isEmpty()) {
+            throw new ServiceException(404, "No items found");
+        }
+        return list;
     }
 }

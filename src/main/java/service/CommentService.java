@@ -1,14 +1,23 @@
 package service;
 
+import bean.CommentResponse;
+import bean.Response;
 import dao.CommentDao;
+import dao.ItemDao;
+import dao.UserDao;
 import entity.Comment;
+import entity.User;
 import exception.ServiceException;
+import implement.CommentServiceImp;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CommentService implements CommentServiceImp {
     private final CommentDao commentDao = new CommentDao();
+    private final UserDao userDao = new UserDao();
+    private final ItemDao itemDao = new ItemDao();
 
     @Override
     public long add(long itemId, long userId, String content) throws ServiceException {
@@ -47,19 +56,42 @@ public class CommentService implements CommentServiceImp {
     }
 
     @Override
-    public List<Comment> findByItemId(long itemId) throws ServiceException {
+    public List<CommentResponse> findByItemId(long itemId) throws ServiceException {
         try {
-            return commentDao.findByItemId(itemId);
+            return toResponse(commentDao.findByItemId(itemId));
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
 
     @Override
-    public List<Comment> findByUserId(long userId) throws ServiceException {
+    public List<CommentResponse> findByUserId(long userId) throws ServiceException {
         try {
-            return commentDao.findByUserId(userId);
+            return toResponse(commentDao.findByUserId(userId));
         } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    private boolean available(Comment comment) throws ServiceException {
+        try {
+            return !comment.getIsDeleted() && userDao.findById(comment.getUserId()) != null && itemDao.findById(comment.getItemId()) != null;
+        } catch (SQLException e) {
+            throw new ServiceException(500,e.getMessage());
+        }
+    }
+
+    private List<CommentResponse> toResponse(List<Comment> comments) throws ServiceException {
+        try {
+            List<CommentResponse> responseList = new ArrayList<>();
+            for (Comment comment : comments) {
+                if (available(comment)) {
+                    User user = userDao.findById(comment.getUserId());
+                    responseList.add(CommentResponse.dto(comment, user == null ? null : user.getUsername()));
+                }
+            }
+            return responseList;
+        } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
         }
     }

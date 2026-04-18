@@ -1,5 +1,6 @@
 package implement;
 
+import bean.CommentResponse;
 import entity.Comment;
 import exception.ServiceException;
 
@@ -10,7 +11,7 @@ public interface CommentServiceImp {
 
     boolean delete(long userId,long id) throws ServiceException;
 
-    List<Comment> findByItemId(long itemId) throws ServiceException;
+    List<CommentResponse> findByItemId(long itemId) throws ServiceException;
 
-    List<Comment> findByUserId(long userId) throws ServiceException;
+    List<CommentResponse> findByUserId(long userId) throws ServiceException;
 }

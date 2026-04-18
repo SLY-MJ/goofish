@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/items/*")
@@ -163,17 +164,8 @@ public class ItemController extends HttpServlet implements JsonUtil {
 
     private void getComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         long id = Long.parseLong(request.getParameter("id"));
-        List<Comment> comments = commentService.findByItemId(id);
-        try {
-            List<CommentResponse> responseList = new java.util.ArrayList<>();
-            for (Comment comment : comments) {
-                User user = userDao.findById(comment.getUserId());
-                responseList.add(CommentResponse.dto(comment, user == null ? null : user.getUsername()));
-            }
-            writeJson(response, new Response<>("ok", 200, responseList));
-        } catch (Exception e) {
-            throw new ServiceException(500, e.getMessage());
-        }
+        List<CommentResponse> comments = commentService.findByItemId(id);
+        writeJson(response, new Response<>("ok", 200, comments));
     }
 
     private void publish(HttpServletRequest request, HttpServletResponse response) throws ServiceException {

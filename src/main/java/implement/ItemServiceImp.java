@@ -22,4 +22,6 @@ public interface ItemServiceImp {
     List<Item> search(String keyword) throws ServiceException;
 
     List<Item> recommend(Long userId) throws ServiceException;
+
+    void increaseViewCount(long itemId) throws ServiceException;
 }
