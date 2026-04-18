@@ -12,7 +12,7 @@ public final class DbUtil {
     private static final String PASSWORD = read("db.password", "DB_PASSWORD", "123456");
     private static final String URL =
             "jdbc:mysql://" + HOST + ":" + PORT + "/" + DATABASE
-                    + "?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8";
+                    + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useUnicode=true&characterEncoding=UTF-8";
 
     static {
         try {
