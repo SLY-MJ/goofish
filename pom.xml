@@ -45,12 +45,6 @@
                 <version>3.4.0</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
-                    <webResources>
-                        <resource>
-                            <directory>frontend/dist</directory>
-                            <filtering>false</filtering>
-                        </resource>
-                    </webResources>
                 </configuration>
             </plugin>
         </plugins>
