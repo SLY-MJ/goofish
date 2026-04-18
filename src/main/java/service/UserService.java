@@ -4,9 +4,11 @@ import dao.UserDao;
 import entity.User;
 import enums.UserRole;
 import exception.ServiceException;
+import implement.UserServiceImp;
 import util.PasswordUtil;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserService implements UserServiceImp {
@@ -116,6 +118,9 @@ public class UserService implements UserServiceImp {
             if (user == null) {
                 throw new ServiceException(404, "User not found");
             }
+            if (isDeleted(user)){
+                throw new ServiceException(400, "User is already deleted");
+            }
             return user;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
@@ -125,7 +130,7 @@ public class UserService implements UserServiceImp {
     @Override
     public List<User> search(String username) throws ServiceException {
         try {
-            return userDao.search(username == null ? "" : username.trim());
+            return getUsers(userDao.search(username == null ? "" : username.trim()));
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -178,5 +183,22 @@ public class UserService implements UserServiceImp {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private boolean isDeleted(User user) {
+        return !user.getStatus();
+    }
+
+    private List<User> getUsers(List<User> users) throws ServiceException {
+        if (users.isEmpty()) {
+            return null;
+        }
+        List<User> list = new ArrayList<>();
+        for (User user : users) {
+            if (!isDeleted(user)) {
+                list.add(user);
+            }
+        }
+        return list;
     }
 }
