@@ -11,71 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-@WebServlet("/orders/*")
-public class OrderController extends HttpServlet implements JsonUtil {
+@WebServlet("/api/orders/*")
+public class OrderController extends BaseController {
     private final OrderService orderService = new OrderService();
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        String path = request.getPathInfo();
-        if (path == null || "/".equals(path)) {
-            writeJson(response, new Response<>("Unknown path", 404, null));
-            return;
-        }
-
-        try {
-            switch (path) {
-                case "/buylist":
-                    buyOrder(request, response);
-                    break;
-                case "/sellist":
-                    sellOrder(request, response);
-                    break;
-                default:
-                    writeJson(response, new Response<>("Unsupported GET path", 404, null));
-            }
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-        } catch (Exception e) {
-            e.printStackTrace();
-            writeJson(response, new Response<>(e.getMessage(), 500, null));
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        String path = request.getPathInfo();
-        if (path == null || "/".equals(path)) {
-            writeJson(response, new Response<>("Unknown path", 404, null));
-            return;
-        }
-
-        try {
-            switch (path) {
-                case "/create":
-                    createOrder(request, response);
-                    break;
-                case "/delete":
-                    deleteOrder(request, response);
-                    break;
-                case "/pay":
-                    pay(request, response);
-                    break;
-                case "/cancel":
-                    cancel(request, response);
-                    break;
-                default:
-                    writeJson(response, new Response<>("Unsupported POST path", 404, null));
-            }
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-        } catch (Exception e) {
-            e.printStackTrace();
-            writeJson(response, new Response<>(e.getMessage(), 500, null));
-        }
-    }
-
-    private void buyOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void buyOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -84,7 +24,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, orderService.getByBuyer(userId)));
     }
 
-    private void sellOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void sellOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -93,7 +33,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, orderService.getBySeller(userId)));
     }
 
-    private void createOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void createOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -105,7 +45,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void deleteOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void deleteOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -123,7 +63,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void pay(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void pay(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -134,7 +74,7 @@ public class OrderController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void cancel(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void cancel(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;

@@ -5,115 +5,27 @@ import bean.ItemDetailResponse;
 import bean.ItemResponse;
 import bean.Response;
 import dao.UserDao;
-import entity.Comment;
 import entity.Item;
 import entity.User;
 import exception.ServiceException;
 import service.CommentService;
 import service.FavoriteService;
 import service.ItemService;
-import util.JsonUtil;
 
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet("/items/*")
-public class ItemController extends HttpServlet implements JsonUtil {
+@WebServlet("/api/items/*")
+public class ItemController extends BaseController{
     private final ItemService itemService = new ItemService();
     private final FavoriteService favoriteService = new FavoriteService();
     private final CommentService commentService = new CommentService();
     private final UserDao userDao = new UserDao();
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-        String path = request.getPathInfo();
-        if (path == null || "/".equals(path)) {
-            writeJson(response, new Response<>("Unknown path", 404, null));
-            return;
-        }
-
-        try {
-            switch (path) {
-                case "/my":
-                    getMy(request, response);
-                    break;
-                case "/recommend":
-                    getRecommend(request, response);
-                    break;
-                case "/detail":
-                    getDetail(request, response);
-                    break;
-                case "/search":
-                    search(request, response);
-                    break;
-                case "/seller":
-                    getBySeller(request, response);
-                    break;
-                case "/favorite":
-                    getMyFavorite(request, response);
-                    break;
-                case "/comment":
-                    getComment(request, response);
-                    break;
-                default:
-                    writeJson(response, new Response<>("Unsupported GET path", 404, null));
-            }
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-        } catch (Exception e) {
-            e.printStackTrace();
-            writeJson(response, new Response<>(e.getMessage(), 500, null));
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-        String path = request.getPathInfo();
-        if (path == null || "/".equals(path)) {
-            writeJson(response, new Response<>("Unknown path", 404, null));
-            return;
-        }
-
-        try {
-            switch (path) {
-                case "/add":
-                    publish(request, response);
-                    break;
-                case "/edit":
-                    edit(request, response);
-                    break;
-                case "/delete":
-                    delete(request, response);
-                    break;
-                case "/favorite":
-                    favorite(request, response);
-                    break;
-                case "/unfavorite":
-                    unfavorite(request, response);
-                    break;
-                case "/addComment":
-                    addComment(request, response);
-                    break;
-                case "/deleteComment":
-                    deleteComment(request, response);
-                    break;
-                default:
-                    writeJson(response, new Response<>("Unsupported POST path", 404, null));
-            }
-        } catch (ServiceException e) {
-            writeJson(response, new Response<>(e.getMessage(), e.getCode(), null));
-        } catch (Exception e) {
-            e.printStackTrace();
-            writeJson(response, new Response<>(e.getMessage(), 500, null));
-        }
-    }
-
-    private void getMy(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void getMy(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -123,13 +35,13 @@ public class ItemController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
-    private void getRecommend(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void getRecommend(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getOptionalLoginUserId(request);
         List<Item> items = itemService.recommend(userId);
         writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
-    private void getDetail(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void getDetail(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         long id = Long.parseLong(request.getParameter("id"));
         itemService.increaseViewCount(id);
         Item item = itemService.findById(id);
@@ -141,18 +53,18 @@ public class ItemController extends HttpServlet implements JsonUtil {
         }
     }
 
-    private void search(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void search(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         List<Item> items = itemService.search(request.getParameter("keyword"));
         writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
-    private void getBySeller(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void getBySeller(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         long sellerId = Long.parseLong(request.getParameter("sellerId"));
         List<Item> items = itemService.findBySeller(sellerId);
         writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
-    private void getMyFavorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void getMyFavorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -162,13 +74,13 @@ public class ItemController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
 
-    private void getComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void getComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         long id = Long.parseLong(request.getParameter("id"));
         List<CommentResponse> comments = commentService.findByItemId(id);
         writeJson(response, new Response<>("ok", 200, comments));
     }
 
-    private void publish(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void publish(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -184,7 +96,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void edit(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void edit(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -203,7 +115,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void delete(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void delete(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -214,7 +126,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void favorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void favorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -225,7 +137,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void unfavorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void unfavorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -236,7 +148,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void addComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void addComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;
@@ -248,7 +160,7 @@ public class ItemController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private void deleteComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void deleteComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         if (userId == null) {
             return;

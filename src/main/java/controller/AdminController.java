@@ -14,43 +14,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-@WebServlet("/admin/*")
-public class AdminController extends HttpServlet implements JsonUtil {
+@WebServlet("/api/admin/*")
+public class AdminController extends BaseController{
     private final AdminService adminService = new AdminService();
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        request.setCharacterEncoding("UTF-8");
-        String path = request.getPathInfo();
-        if (path == null || path.equals("/")) {
-            writeJson(response, new Response<>("无法识别path", 404, null));
-            return;
-        }
-
-        try {
-            switch (path) {
-                case "/register":
-                    registerAdmin(request, response);
-                    break;
-                case "/deleteUser":
-                    deleteUser(request, response);
-                    break;
-                case "/deleteItem":
-                    deleteItem(request, response);
-                    break;
-                case "/deleteComment":
-                    deleteComment(request, response);
-                    break;
-                default:
-                    writeJson(response, new Response<>("不支持的 POST 操作: " + path, 404, null));
-            }
-        }catch (Exception e) {
-            e.printStackTrace();
-            writeJson(response, new Response<>(e.getMessage(), 500, null));
-        }
-    }
-
-    private void registerAdmin(HttpServletRequest request, HttpServletResponse response) {
+    public void registerAdmin(HttpServletRequest request, HttpServletResponse response) {
         Long adminId = getLoginUserId(request, response);
         if (adminId == null) {
             return;
@@ -70,7 +38,7 @@ public class AdminController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("管理员注册成功", 200, new UserResponse(admin)));
     }
 
-    private void deleteUser(HttpServletRequest request, HttpServletResponse response) {
+    public void deleteUser(HttpServletRequest request, HttpServletResponse response) {
         Long adminId = getLoginUserId(request, response);
         if (adminId == null) {
             return;
@@ -87,7 +55,7 @@ public class AdminController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("删除用户成功", 200, null));
     }
 
-    private void deleteItem(HttpServletRequest request, HttpServletResponse response) {
+    public void deleteItem(HttpServletRequest request, HttpServletResponse response) {
         Long adminId = getLoginUserId(request, response);
         if (adminId == null) {
             return;
@@ -104,7 +72,7 @@ public class AdminController extends HttpServlet implements JsonUtil {
         writeJson(response, new Response<>("删除商品成功", 200, null));
     }
 
-    private void deleteComment(HttpServletRequest request, HttpServletResponse response) {
+    public void deleteComment(HttpServletRequest request, HttpServletResponse response) {
         Long adminId = getLoginUserId(request, response);
         if (adminId == null) {
             return;
