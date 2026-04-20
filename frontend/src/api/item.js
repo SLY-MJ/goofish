@@ -1,15 +1,15 @@
 import { get, post } from "@/api/http";
 
 export function getRecommendItems() {
-  return get("/items/recommend");
+  return get("/items/getRecommend");
 }
 
 export function getMyItems() {
-  return get("/items/my");
+  return get("/items/getMy");
 }
 
 export function getFavoriteItems() {
-  return get("/items/favorite");
+  return get("/items/getMyFavorite");
 }
 
 export function searchItems(keyword) {
@@ -17,19 +17,19 @@ export function searchItems(keyword) {
 }
 
 export function getItemDetail(id) {
-  return get("/items/detail", { params: { id } });
+  return get("/items/getDetail", { params: { id } });
 }
 
 export function getSellerItems(sellerId) {
-  return get("/items/seller", { params: { sellerId } });
+  return get("/items/getBySeller", { params: { sellerId } });
 }
 
 export function getItemComments(id) {
-  return get("/items/comment", { params: { id } });
+  return get("/items/getComment", { params: { id } });
 }
 
 export function publishItem(payload) {
-  return post("/items/add", payload);
+  return post("/items/publish", payload);
 }
 
 export function editItem(payload) {

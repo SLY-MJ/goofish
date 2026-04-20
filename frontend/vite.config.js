@@ -15,10 +15,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     proxy: {
-      "/user": backendTarget,
-      "/items": backendTarget,
-      "/orders": backendTarget,
-      "/admin": backendTarget,
+      "/api": backendTarget,
       "/image": backendTarget,
     },
   },

@@ -1,11 +1,11 @@
 import { get, post } from "@/api/http";
 
 export function getCurrentUser() {
-  return get("/user/me");
+  return get("/user/getCurrentUser");
 }
 
 export function getUserDetail(id) {
-  return get("/user/detail", { params: { id } });
+  return get("/user/getDetail", { params: { id } });
 }
 
 export function searchUsers(username) {
@@ -13,11 +13,11 @@ export function searchUsers(username) {
 }
 
 export function getMyFollows() {
-  return get("/user/follows");
+  return get("/user/getFollows");
 }
 
 export function getMyFans() {
-  return get("/user/fans");
+  return get("/user/getFans");
 }
 
 export function register(payload) {

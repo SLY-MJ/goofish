@@ -1,7 +1,7 @@
 import { post } from "@/api/http";
 
 export function registerAdmin(payload) {
-  return post("/admin/register", payload);
+  return post("/admin/registerAdmin", payload);
 }
 
 export function adminDeleteUser(id) {
