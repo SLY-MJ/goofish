@@ -83,43 +83,7 @@ public class AppFilter implements Filter {
     }
 
     private boolean isApiRequest(String path) {
-        if (path.equals("/user") || path.startsWith("/user/")) {
-            return true;
-        }
-        if (path.equals("/orders") || path.startsWith("/orders/")) {
-            return true;
-        }
-        if (path.equals("/admin") || path.startsWith("/admin/")) {
-            return true;
-        }
-        if (!path.equals("/items") && !path.startsWith("/items/")) {
-            return false;
-        }
-
-        String itemSubPath = path.length() > "/items".length() ? path.substring("/items".length()) : "";
-        if (itemSubPath.startsWith("/")) {
-            itemSubPath = itemSubPath.substring(1);
-        }
-        if (itemSubPath.isEmpty()) {
-            return true;
-        }
-
-        Set<String> itemApiPaths = Set.of(
-                "my",
-                "recommend",
-                "detail",
-                "search",
-                "seller",
-                "favorite",
-                "comment",
-                "add",
-                "edit",
-                "delete",
-                "unfavorite",
-                "addComment",
-                "deleteComment"
-        );
-        return itemApiPaths.contains(itemSubPath);
+        return path.equals("/api")||path.startsWith("/api/");
     }
 
     @Override
