@@ -15,7 +15,6 @@ import service.ItemService;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @WebServlet("/api/items/*")
@@ -27,10 +26,6 @@ public class ItemController extends BaseController{
 
     public void getMy(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         List<Item> items = itemService.findBySeller(userId);
         writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
@@ -66,10 +61,6 @@ public class ItemController extends BaseController{
 
     public void getMyFavorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         List<Item> items = favoriteService.getMyFavorite(userId);
         writeJson(response, new Response<>("ok", 200, ItemResponse.dto(items)));
     }
@@ -82,10 +73,6 @@ public class ItemController extends BaseController{
 
     public void publish(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         itemService.add(
                 userId,
                 request.getParameter("title"),
@@ -98,10 +85,6 @@ public class ItemController extends BaseController{
 
     public void edit(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         itemService.edit(
                 userId,
                 Long.parseLong(request.getParameter("id")),
@@ -117,10 +100,6 @@ public class ItemController extends BaseController{
 
     public void delete(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         long id = Long.parseLong(request.getParameter("id"));
         itemService.delete(userId, id);
         writeJson(response, new Response<>("ok", 200, null));
@@ -128,10 +107,6 @@ public class ItemController extends BaseController{
 
     public void favorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         long itemId = Long.parseLong(request.getParameter("id"));
         favoriteService.add(userId, itemId);
         writeJson(response, new Response<>("ok", 200, null));
@@ -139,10 +114,6 @@ public class ItemController extends BaseController{
 
     public void unfavorite(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         long itemId = Long.parseLong(request.getParameter("id"));
         favoriteService.remove(userId, itemId);
         writeJson(response, new Response<>("ok", 200, null));
@@ -150,10 +121,6 @@ public class ItemController extends BaseController{
 
     public void addComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         long itemId = Long.parseLong(request.getParameter("id"));
         String content = request.getParameter("content");
         commentService.add(itemId, userId, content);
@@ -162,29 +129,10 @@ public class ItemController extends BaseController{
 
     public void deleteComment(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         long id = Long.parseLong(request.getParameter("id"));
         commentService.delete(userId, id);
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private Long getLoginUserId(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("id") == null) {
-            writeJson(response, new Response<>("Not logged in", 401, null));
-            return null;
-        }
-        return ((Number) session.getAttribute("id")).longValue();
-    }
 
-    private Long getOptionalLoginUserId(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("id") == null) {
-            return null;
-        }
-        return ((Number) session.getAttribute("id")).longValue();
-    }
 }

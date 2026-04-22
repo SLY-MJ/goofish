@@ -1,5 +1,7 @@
 package controller;
 
+import bean.Response;
+import exception.ServiceException;
 import util.JsonUtil;
 
 import javax.servlet.ServletException;
@@ -22,11 +24,37 @@ public class BaseController extends HttpServlet implements JsonUtil {
         Class<? extends BaseController> cls=this.getClass();
 
         try {
-            Method method= cls.getMethod(methodName,HttpServletRequest.class,HttpServletResponse.class);
-            method.invoke(this,req,resp);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            e.printStackTrace();
+            Method method = cls.getMethod(methodName, HttpServletRequest.class, HttpServletResponse.class);
+            method.invoke(this, req, resp);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof ServiceException se) {
+                writeJson(resp, new Response<>(se.getMessage(), se.getCode(), null));
+                return;
+            }
+            throw new ServletException(cause);
+        } catch (NoSuchMethodException e) {
+            writeJson(resp, new Response<>("API not found", 404, null));
+        } catch (IllegalAccessException e) {
+            throw new ServletException(e);
         }
+
+    }
+
+    protected Long getLoginUserId(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Object uid = request.getAttribute("id");
+        if (!(uid instanceof Number)) {
+            throw new ServiceException(401, "Unauthorized");
+        }
+        return ((Number) uid).longValue();
+    }
+
+    protected Long getOptionalLoginUserId(HttpServletRequest request) {
+        Object uid = request.getAttribute("id");
+        if (!(uid instanceof Number)) {
+            return null;
+        }
+        return ((Number) uid).longValue();
     }
 
 }

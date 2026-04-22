@@ -5,8 +5,10 @@ import bean.UserResponse;
 import entity.User;
 import exception.ServiceException;
 import service.FollowService;
+import service.RefreshTokenService;
 import service.UserService;
 import util.JsonUtil;
+import util.RefreshTokenUtil;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -17,16 +19,13 @@ import java.io.IOException;
 import java.util.List;
 
 @WebServlet("/api/user/*")
-public class UserController extends BaseController{
+public class UserController extends BaseController {
     private final UserService userService = new UserService();
     private final FollowService followService = new FollowService();
+    private final RefreshTokenService refreshTokenService = new RefreshTokenService();
 
     public void getCurrentUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         User user = userService.getUserById(userId);
         writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
     }
@@ -39,20 +38,12 @@ public class UserController extends BaseController{
 
     public void getFollows(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         List<User> follows = followService.getFollows(userId);
         writeJson(response, new Response<>("ok", 200, UserResponse.dto(follows)));
     }
 
     public void getFans(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         List<User> fans = followService.getFans(userId);
         writeJson(response, new Response<>("ok", 200, UserResponse.dto(fans)));
     }
@@ -64,31 +55,37 @@ public class UserController extends BaseController{
     }
 
     public void register(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
-        User user = userService.register(request.getParameter("username"), request.getParameter("password"));
-        request.getSession(true).setAttribute("id", user.getId());
-        writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        boolean isRemember = Boolean.parseBoolean(request.getParameter("isRemember")); // 可选，默认 false
+
+        userService.register(username, password);
+
+        UserService.loginInfo info = userService.login(username, password, isRemember);
+        writeJson(response, new Response<>("ok", 200, info));
     }
+
 
     public void login(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
-        User user = userService.login(request.getParameter("username"), request.getParameter("password"));
-        request.getSession(true).setAttribute("id", user.getId());
-        writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
+        boolean isRemember = Boolean.parseBoolean(request.getParameter("isRemember"));
+        UserService.loginInfo info = userService.login(request.getParameter("username"), request.getParameter("password"), isRemember);
+        writeJson(response, new Response<>("ok", 200, info));
     }
 
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
+    public void logout(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        String refreshToken = request.getParameter("refreshToken");
+        refreshTokenService.logout(refreshToken);
         writeJson(response, new Response<>("ok", 200, null));
+    }
+
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        String token = request.getParameter("refreshToken");
+            String accessToken = refreshTokenService.refresh(token);
+            writeJson(response, new Response<>("ok", 200, accessToken));
     }
 
     public void update(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         User user = userService.update(
                 userId,
                 request.getParameter("username"),
@@ -101,10 +98,6 @@ public class UserController extends BaseController{
 
     public void changePassword(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         User user = userService.changePassword(
                 userId,
                 request.getParameter("oldPassword"),
@@ -115,10 +108,6 @@ public class UserController extends BaseController{
 
     public void recharge(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         double amount = Double.parseDouble(request.getParameter("amount"));
         User user = userService.recharge(userId, amount);
         writeJson(response, new Response<>("ok", 200, new UserResponse(user)));
@@ -126,10 +115,6 @@ public class UserController extends BaseController{
 
     public void follow(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         long followedId = Long.parseLong(request.getParameter("followedId"));
         followService.add(userId, followedId);
         writeJson(response, new Response<>("ok", 200, null));
@@ -137,28 +122,9 @@ public class UserController extends BaseController{
 
     public void unfollow(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        if (userId == null) {
-            return;
-        }
-
         long followedId = Long.parseLong(request.getParameter("followedId"));
         followService.delete(userId, followedId);
         writeJson(response, new Response<>("ok", 200, null));
     }
 
-    private Long getLoginUserId(HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("id") == null) {
-            writeJson(response, new Response<>("Not logged in", 401, null));
-            return null;
-        }
-
-        Object value = session.getAttribute("id");
-        if (value instanceof Number) {
-            return ((Number) value).longValue();
-        }
-
-        writeJson(response, new Response<>("Invalid session", 401, null));
-        return null;
-    }
 }
