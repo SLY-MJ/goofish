@@ -2,13 +2,14 @@ package implement;
 
 import entity.User;
 import exception.ServiceException;
+import service.UserService;
 
 import java.util.List;
 
 public interface UserServiceImp {
     User register(String username, String password) throws ServiceException;
 
-    User login(String username, String password) throws ServiceException;
+    UserService.loginInfo login(String username, String password, boolean isRemember) throws ServiceException;
 
     void deleteUser(long id) throws ServiceException;
 

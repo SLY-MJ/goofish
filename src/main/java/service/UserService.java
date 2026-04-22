@@ -1,11 +1,15 @@
 package service;
 
+import bean.UserResponse;
+import dao.RefreshTokenDao;
 import dao.UserDao;
 import entity.User;
 import enums.UserRole;
 import exception.ServiceException;
 import implement.UserServiceImp;
+import util.JWTUtil;
 import util.PasswordUtil;
+import util.RefreshTokenUtil;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,6 +17,9 @@ import java.util.List;
 
 public class UserService implements UserServiceImp {
     private final UserDao userDao = new UserDao();
+    private final RefreshTokenDao refreshTokenDao = new RefreshTokenDao();
+
+    public record loginInfo(UserResponse user, String accessToken, String refreshToken) {}
 
     @Override
     public User register(String username, String password) throws ServiceException {
@@ -38,7 +45,7 @@ public class UserService implements UserServiceImp {
     }
 
     @Override
-    public User login(String username, String password) throws ServiceException {
+    public loginInfo login(String username, String password,boolean isRemember) throws ServiceException {
         if (isBlank(username) || isBlank(password)) {
             throw new ServiceException(400, "Username and password are required");
         }
@@ -52,7 +59,17 @@ public class UserService implements UserServiceImp {
             if (!PasswordUtil.verify(password, hashSalt)) {
                 throw new ServiceException(401, "Invalid password");
             }
-            return user;
+            String accessToken=JWTUtil.createToken(user.getId());
+            String refreshToken = null;
+            if(isRemember){
+                long now = System.currentTimeMillis();
+                RefreshTokenUtil.TokenInfo tf=RefreshTokenUtil.getRefreshToken(now);
+                refreshToken= tf.token();
+                String tokenHash=tf.tokenHash();
+                long expireTime=tf.expireTime();
+                refreshTokenDao.add(user.getId(),tokenHash,expireTime);
+            }
+            return new loginInfo(new UserResponse(user),accessToken,refreshToken);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
