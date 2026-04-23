@@ -9,8 +9,6 @@ public class RefreshTokenDao {
     public RefreshTokenDao() {
     }
 
-    ;
-
     public void add(long userId, String tokenHash, long now) {
         String sql = "insert into refresh_tokens (user_id,token_hash,expires_at,revoked) values(?,?,?,0)";
         try (Connection c = DbUtil.getConnection()) {
@@ -29,6 +27,17 @@ public class RefreshTokenDao {
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, tokenHash);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void revokeByUserId(long userId) {
+        String sql = "update refresh_tokens set revoked=1 where user_id=? and revoked=0";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setLong(1, userId);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
