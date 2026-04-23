@@ -12,7 +12,10 @@ public class RefreshTokenService implements RefreshTokenServiceImp {
 
     @Override
     public String refresh(String refreshToken) throws ServiceException {
-        String hash=RefreshTokenUtil.hashToken(refreshToken);
+        if (refreshToken == null || refreshToken.trim().isEmpty()) {
+            throw new ServiceException(401, "invalid refresh token");
+        }
+        String hash = RefreshTokenUtil.hashToken(refreshToken);
         RefreshToken rt=refreshTokenDao.findByHash(hash);
         if(rt==null){
             throw new ServiceException(401,"invalid refresh token");
@@ -27,14 +30,10 @@ public class RefreshTokenService implements RefreshTokenServiceImp {
 
     @Override
     public void logout(String refreshToken) throws ServiceException {
-        if(refreshToken==null||refreshToken.isEmpty()){
-            throw new ServiceException(401,"invalid refresh token");
+        if (refreshToken == null || refreshToken.trim().isEmpty()) {
+            return;
         }
-        String hash=RefreshTokenUtil.hashToken(refreshToken);
-        RefreshToken rt=refreshTokenDao.findByHash(hash);
-        if(rt==null){
-            throw new ServiceException(401,"invalid refresh token");
-        }
+        String hash = RefreshTokenUtil.hashToken(refreshToken);
         refreshTokenDao.Revoke(hash);
     }
 }
