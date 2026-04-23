@@ -149,6 +149,16 @@ public class ItemDao {
         }
     }
 
+    public void updateReason(long id, String reason) throws SQLException {
+        String sql = "update items set reason=? where id=?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setString(1, reason);
+            ps.setLong(2, id);
+            ps.executeUpdate();
+        }
+    }
+
     public void updateStock(long id, int stock) throws SQLException {
         String sql = "update items set stock=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
@@ -207,6 +217,7 @@ public class ItemDao {
                 rs.getDouble("price"),
                 rs.getInt("stock"),
                 ItemStatus.valueOf(rs.getString("status")),
+                rs.getString("reason"),
                 rs.getString("cover_image"),
                 rs.getInt("view_count"),
                 rs.getInt("is_deleted")==1,//0没被删 1是被删了
@@ -219,7 +230,7 @@ public class ItemDao {
     public List<Item> findRandomItem(int limit, Long excludeSellerId) throws SQLException {
         StringBuilder sql = new StringBuilder(
                 "select * from items " +
-                        "where status=? and is_deleted=0 and stock>0"
+                        "where status=? and is_deleted=0 and status='ON_SALE'"
         );
         if (excludeSellerId != null) {
             sql.append(" and seller_id<>?");
