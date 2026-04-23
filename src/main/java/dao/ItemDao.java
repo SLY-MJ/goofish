@@ -129,79 +129,72 @@ public class ItemDao {
         }
     }
 
-    public boolean updateTitle(long id, String title) throws SQLException {
+    public void updateTitle(long id, String title) throws SQLException {
         String sql = "update items set title=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, title);
             ps.setLong(2, id);
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updateStatus(long id,ItemStatus status) throws SQLException {
+    public void updateStatus(long id, ItemStatus status) throws SQLException {
         String sql = "update items set status=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, status.name());
             ps.setLong(2, id);
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updateStock(long id,int stock) throws SQLException {
+    public void updateStock(long id, int stock) throws SQLException {
         String sql = "update items set stock=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setInt(1, stock);
             ps.setLong(2, id);
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updatePrice(long id,double price) throws SQLException {
+    public void updatePrice(long id, double price) throws SQLException {
         String sql = "update items set price=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setDouble(1, price);
             ps.setLong(2, id);
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updateCoverImage(long id,String url) throws SQLException {
+    public void updateCoverImage(long id, String url) throws SQLException {
         String sql = "update items set cover_image=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, url);
             ps.setLong(2, id);
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updateDescription(long id,String description) throws SQLException {
+    public void updateDescription(long id, String description) throws SQLException {
         String sql = "update items set description=?  where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, description);
             ps.setLong(2, id);
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean increaseViewCount(long id) throws SQLException {
+    public void increaseViewCount(long id) throws SQLException {
         String sql = "update items set view_count=view_count+1 where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, id);
             ps.executeUpdate();
-            return true;
         }
     }
 
