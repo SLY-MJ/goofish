@@ -9,7 +9,8 @@ public class Item {
     private String description;
     private double price;
     private int stock;//库存 默认1
-    private ItemStatus status; // 枚举类"ON_SALE", "SOLD", "OFF_SHELF"
+    private ItemStatus status;// 枚举类"ON_SALE", "SOLD", "OFF_SHELF"
+    private String reason;//下架原因
     private String coverImage;
     private int viewCount;
     private boolean isDeleted;
@@ -28,7 +29,7 @@ public class Item {
         this.coverImage = coverImage;
     }
 
-    public Item(long id, long sellerId, String title, String description, double price, int stock, ItemStatus status,
+    public Item(long id, long sellerId, String title, String description, double price, int stock, ItemStatus status,String reason,
                 String coverImage, int viewCount, boolean isDeleted, String createTime, String updateTime) {
         this.id = id;
         this.sellerId = sellerId;
@@ -37,6 +38,7 @@ public class Item {
         this.price = price;
         this.stock = stock;
         this.status = status;
+        this.reason = reason;
         this.coverImage = coverImage;
         this.viewCount = viewCount;
         this.isDeleted = isDeleted;
@@ -138,5 +140,13 @@ public class Item {
 
     public void setUpdateTime(String updateTime) {
         this.updateTime = updateTime;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 }
