@@ -6,6 +6,7 @@ public class ItemImage {
     private String imageUrl;
     private int sortOrder;
     private String createTime;
+    private boolean isDeleted;
 
     public ItemImage() {
     }
@@ -16,12 +17,13 @@ public class ItemImage {
         this.sortOrder = sortOrder;
     }
 
-    public ItemImage(long id, long itemId, String imageUrl, int sortOrder, String createTime) {
+    public ItemImage(long id, long itemId, String imageUrl, int sortOrder, String createTime,boolean isDeleted) {
         this.id = id;
         this.itemId = itemId;
         this.imageUrl = imageUrl;
         this.sortOrder = sortOrder;
         this.createTime = createTime;
+        this.isDeleted = isDeleted;
     }
 
     public long getId() {
@@ -62,5 +64,13 @@ public class ItemImage {
 
     public void setCreateTime(String createTime) {
         this.createTime = createTime;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
 }
