@@ -53,13 +53,29 @@ async function loadPage() {
   try {
     await authStore.ensureInitialized();
     const userId = Number(route.params.id);
-    const [user, sellerItems] = await Promise.all([
+
+    const [userResult, itemResult] = await Promise.allSettled([
       getUserDetail(userId),
       getSellerItems(userId),
     ]);
 
-    profile.value = user;
-    items.value = sellerItems || [];
+    if (userResult.status !== "fulfilled") {
+      throw userResult.reason;
+    }
+    profile.value = userResult.value;
+
+    if (itemResult.status === "fulfilled") {
+      items.value = itemResult.value || [];
+    } else {
+      const error = itemResult.reason;
+      const statusCode = error?.code ?? error?.response?.status ?? error?.payload?.code;
+      if (statusCode === 404) {
+        items.value = [];
+      } else {
+        throw error;
+      }
+    }
+
     await loadFollowState();
   } catch (error) {
     pageError.value = getErrorMessage(error, "加载用户主页失败");
@@ -119,7 +135,7 @@ watch(
 <template>
   <div class="page-grid">
     <div v-if="pageError" class="notice notice--error">{{ pageError }}</div>
-    <div v-else-if="loading" class="panel panel--center">正在加载用户主页...</div>
+    <div v-else-if="loading && !profile" class="panel panel--center">正在加载用户主页...</div>
     <template v-else-if="profile">
       <section class="hero-card">
         <div class="hero-card__content">

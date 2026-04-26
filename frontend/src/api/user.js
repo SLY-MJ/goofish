@@ -28,8 +28,24 @@ export function login(payload) {
   return post("/user/login", payload);
 }
 
-export function logout() {
-  return post("/user/logout");
+export function logout(refreshToken) {
+  return post("/user/logout", { refreshToken });
+}
+
+export function refreshToken(refreshToken) {
+  return post("/user/refreshToken", { refreshToken });
+}
+
+export function getCaptcha() {
+  return get("/user/captcha");
+}
+
+export function verifyResetIdentity(payload) {
+  return post("/user/verifyResetIdentity", payload);
+}
+
+export function resetPassword(payload) {
+  return post("/user/resetPassword", payload);
 }
 
 export function updateProfile(payload) {

@@ -32,11 +32,13 @@ const editForm = reactive({
   description: "",
   price: "",
   stock: 1,
-  status: "ON_SALE",
+  status: "SUBMITTED",
   coverImage: "",
 });
 
 const statusOptions = [
+  { label: "待审核", value: "SUBMITTED" },
+  { label: "已驳回", value: "REJECTED" },
   { label: "在售", value: "ON_SALE" },
   { label: "已售出", value: "SOLD" },
   { label: "已下架", value: "OFF_SHELF" },
@@ -56,7 +58,7 @@ function resetEditForm() {
   editForm.description = "";
   editForm.price = "";
   editForm.stock = 1;
-  editForm.status = "ON_SALE";
+  editForm.status = "SUBMITTED";
   editForm.coverImage = "";
   editError.value = "";
 }
@@ -81,7 +83,7 @@ async function handlePublish() {
 
   try {
     await publishItem(publishForm);
-    successMessage.value = "商品发布成功";
+    successMessage.value = "商品提交成功，等待管理员审核";
     resetPublishForm();
     await loadItems();
   } catch (error) {
@@ -212,6 +214,9 @@ onMounted(loadItems);
         <div v-if="loading" class="empty-block">正在加载商品...</div>
         <div v-else-if="items.length" class="item-grid">
           <ItemCard v-for="item in items" :key="item.id" :item="item">
+            <template #extra>
+              <p v-if="item.reason" class="helper-text">驳回原因：{{ item.reason }}</p>
+            </template>
             <template #actions>
               <button
                 class="button button--ghost button--small"

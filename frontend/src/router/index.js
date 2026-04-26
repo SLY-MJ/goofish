@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 
 import { useAuthStore } from "@/stores/auth";
 import AdminView from "@/views/AdminView.vue";
+import ForgotPasswordView from "@/views/ForgotPasswordView.vue";
 import HomeView from "@/views/HomeView.vue";
 import ItemDetailView from "@/views/ItemDetailView.vue";
 import LoginView from "@/views/LoginView.vue";
@@ -30,6 +31,12 @@ const routes = [
     name: "register",
     component: RegisterView,
     meta: { title: "注册" },
+  },
+  {
+    path: "/forgot-password",
+    name: "forgot-password",
+    component: ForgotPasswordView,
+    meta: { title: "找回密码" },
   },
   {
     path: "/items/:id",

@@ -1,4 +1,6 @@
 const ITEM_STATUS_TEXT = {
+  SUBMITTED: "待审核",
+  REJECTED: "已驳回",
   ON_SALE: "在售",
   SOLD: "已售出",
   OFF_SHELF: "已下架",

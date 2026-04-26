@@ -7,6 +7,13 @@ import {
   logout,
   register,
 } from "@/api/user";
+import {
+  clearAuthTokens,
+  getAccessToken,
+  getRefreshToken,
+  setAccessToken,
+  setRefreshToken,
+} from "@/api/http";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref(null);
@@ -24,11 +31,16 @@ export const useAuthStore = defineStore("auth", () => {
     if (!initPromise) {
       initPromise = (async () => {
         try {
+          if (!getAccessToken() && !getRefreshToken()) {
+            user.value = null;
+            return;
+          }
           user.value = await getCurrentUser();
         } catch (error) {
           if (error?.code !== 401) {
             console.error(error);
           }
+          clearAuthTokens();
           user.value = null;
         } finally {
           initialized.value = true;
@@ -47,19 +59,29 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   async function loginAction(payload) {
-    user.value = await login(payload);
+    const result = await login(payload);
+    setAccessToken(result?.accessToken);
+    setRefreshToken(result?.refreshToken);
+    user.value = result?.user || null;
     initialized.value = true;
     return user.value;
   }
 
   async function registerAction(payload) {
-    user.value = await register(payload);
+    const result = await register(payload);
+    setAccessToken(result?.accessToken);
+    setRefreshToken(result?.refreshToken);
+    user.value = result?.user || null;
     initialized.value = true;
     return user.value;
   }
 
   async function logoutAction() {
-    await logout();
+    try {
+      await logout(getRefreshToken());
+    } finally {
+      clearAuthTokens();
+    }
     user.value = null;
     initialized.value = true;
   }
