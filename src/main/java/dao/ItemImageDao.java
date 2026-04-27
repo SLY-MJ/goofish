@@ -53,6 +53,20 @@ public class ItemImageDao {
         return null;
     }
 
+    public ItemImage findByItemIdAndOrder(long itemId, int sortOrder) throws SQLException {
+        String sql = "select * from item_images where item_id=? and sort_order=?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setLong(1, itemId);
+            ps.setInt(2, sortOrder);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return getItemImage(rs);
+            }
+            return null;
+        }
+    }
+
     public List<ItemImage> findByItemId(long itemId) throws SQLException {
         String sql = "select * from item_images where item_id=? order by sort_order asc,id asc";
         try (Connection c = DbUtil.getConnection()) {
@@ -79,22 +93,22 @@ public class ItemImageDao {
         }
     }
 
-    public void updateImageUrl(ItemImage itemImage) throws SQLException {
+    public void updateImageUrl(long id,String url) throws SQLException {
         String sql = "update item_images set image_url=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
-            ps.setString(1, itemImage.getImageUrl());
-            ps.setLong(2, itemImage.getId());
+            ps.setString(1, url);
+            ps.setLong(2, id);
             ps.executeUpdate();
         }
     }
 
-    public void updateSortOrder(ItemImage itemImage) throws SQLException {
+    public void updateSortOrder(long id,int order) throws SQLException {
         String sql = "update item_images set sort_order=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
-            ps.setInt(1, itemImage.getSortOrder());
-            ps.setLong(2, itemImage.getId());
+            ps.setInt(1, order);
+            ps.setLong(2, id);
             ps.executeUpdate();
         }
     }
