@@ -12,8 +12,8 @@ public class ItemDao {
     public ItemDao() {
     }
 
-    public long add(Item item) throws SQLException {
-        String sql = "insert into items(seller_id,title,description,price,stock,status,cover_image) values(?,?,?,?,?,?,?)";
+    public void add(Item item) throws SQLException {
+        String sql = "insert into items(seller_id,title,description,price,stock,status) values(?,?,?,?,?,?,?)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setLong(1, item.getSellerId());
@@ -22,24 +22,16 @@ public class ItemDao {
             ps.setDouble(4, item.getPrice());
             ps.setInt(5, item.getStock());
             ps.setString(6, item.getStatus() == null ? ItemStatus.ON_SALE.name() : item.getStatus().name());
-            ps.setString(7, item.getCoverImage());
             ps.executeUpdate();
-
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getLong(1);
-            }
         }
-        return -1;
     }
 
-    public boolean delete(long id) throws SQLException {
+    public void delete(long id) throws SQLException {
         String sql = "update items set is_deleted=1 where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, id);
             ps.executeUpdate();
-            return true;
         }
     }
 
@@ -112,8 +104,8 @@ public class ItemDao {
         }
     }
 
-    public boolean update(Item item) throws SQLException {
-        String sql = "update items set seller_id=?,title=?,description=?,price=?,stock=?,status=?,cover_image=? where id=?";
+    public void update(Item item) throws SQLException {
+        String sql = "update items set seller_id=?,title=?,description=?,price=?,stock=?,status=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, item.getSellerId());
@@ -122,10 +114,8 @@ public class ItemDao {
             ps.setDouble(4, item.getPrice());
             ps.setInt(5, item.getStock());
             ps.setString(6, item.getStatus().name());
-            ps.setString(7, item.getCoverImage());
-            ps.setLong(8, item.getId());
+            ps.setLong(7, item.getId());
             ps.executeUpdate();
-            return true;
         }
     }
 
@@ -179,16 +169,6 @@ public class ItemDao {
         }
     }
 
-    public void updateCoverImage(long id, String url) throws SQLException {
-        String sql = "update items set cover_image=? where id=?";
-        try (Connection c = DbUtil.getConnection()) {
-            PreparedStatement ps = c.prepareStatement(sql);
-            ps.setString(1, url);
-            ps.setLong(2, id);
-            ps.executeUpdate();
-        }
-    }
-
     public void updateDescription(long id, String description) throws SQLException {
         String sql = "update items set description=?  where id=?";
         try (Connection c = DbUtil.getConnection()) {
@@ -218,7 +198,7 @@ public class ItemDao {
                 rs.getInt("stock"),
                 ItemStatus.valueOf(rs.getString("status")),
                 rs.getString("reason"),
-                rs.getString("cover_image"),
+                null, //封面图需要单独查询
                 rs.getInt("view_count"),
                 rs.getInt("is_deleted")==1,//0没被删 1是被删了
                 rs.getString("created_at"),
