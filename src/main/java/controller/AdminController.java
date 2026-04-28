@@ -30,13 +30,20 @@ public class AdminController extends BaseController {
         writeJson(response, new Response<>("管理员注册成功", 200, new UserResponse(admin)));
     }
 
-    public void deleteUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+    public void banUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long adminId = getLoginUserId(request, response);
 
         long userId = Long.parseLong(request.getParameter("id"));
-        adminService.deleteUser(adminId, userId);
+        adminService.banUser(adminId, userId);
 
         writeJson(response, new Response<>("删除用户成功", 200, null));
+    }
+
+    public void unbanUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long adminId = getLoginUserId(request, response);
+
+        long userId = Long.parseLong(request.getParameter("id"));
+        adminService.unBanUser(adminId, userId);
     }
 
     public void deleteItem(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
@@ -57,4 +64,23 @@ public class AdminController extends BaseController {
         writeJson(response, new Response<>("删除评论成功", 200, null));
     }
 
+    public void approveItem(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long adminId = getLoginUserId(request, response);
+        long itemId = Long.parseLong(request.getParameter("id"));
+        adminService.approveItem(adminId, itemId);
+        writeJson(response, new Response<>("审核通过", 200, null));
+    }
+
+    public void rejectItem(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long adminId = getLoginUserId(request, response);
+        long itemId = Long.parseLong(request.getParameter("id"));
+        String reason = request.getParameter("reason");
+        adminService.rejectItem(adminId, itemId, reason);
+        writeJson(response, new Response<>("审核驳回", 200, null));
+    }
+
+    public void getPendingItem(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long adminId = getLoginUserId(request, response);
+        writeJson(response, new Response<>("ok", 200, adminService.getPendingItems(adminId)));
+    }
 }
