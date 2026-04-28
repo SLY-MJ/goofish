@@ -3,13 +3,16 @@ package service;
 import dao.CommentDao;
 import dao.ItemDao;
 import dao.UserDao;
+import entity.Item;
 import entity.User;
+import enums.ItemStatus;
 import enums.UserRole;
 import exception.ServiceException;
 import implement.AdminServiceImp;
 import util.PasswordUtil;
 
 import java.sql.SQLException;
+import java.util.List;
 
 public class AdminService implements AdminServiceImp {
     private final UserDao userDao = new UserDao();
@@ -66,10 +69,71 @@ public class AdminService implements AdminServiceImp {
     }
 
     @Override
-    public void deleteUser(long adminId, long id) throws ServiceException {
+    public void banUser(long adminId, long id) throws ServiceException {
         identify(adminId);
         try {
             userDao.delete(id);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public void unBanUser(long adminId, long id) throws ServiceException {
+        identify(adminId);
+        try {
+            userDao.restore(id);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public void approveItem(long adminId, long id) throws ServiceException {
+        identify(adminId);
+        try {
+            itemDao.updateStatus(id, ItemStatus.ON_SALE);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public void rejectItem(long adminId, long id,String reason) throws ServiceException {
+        identify(adminId);
+        try {
+            itemDao.updateStatus(id, ItemStatus.REJECTED);
+            itemDao.updateReason(id, reason);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Item> getPendingItems(long adminId) throws ServiceException {
+        identify(adminId);
+        try {
+            return itemDao.findByStatus(ItemStatus.SUBMITTED);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Item> getAllItems(long adminId) throws ServiceException {
+        identify(adminId);
+        try {
+            return itemDao.findAll();
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public List<User> getAllUsers(long adminId) throws ServiceException {
+        identify(adminId);
+        try {
+            return userDao.findAll();
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
