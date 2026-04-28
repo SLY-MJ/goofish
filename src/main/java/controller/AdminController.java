@@ -30,6 +30,10 @@ public class AdminController extends BaseController {
         writeJson(response, new Response<>("管理员注册成功", 200, new UserResponse(admin)));
     }
 
+    public void deleteUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long adminId = getLoginUserId(request, response);
+    }
+
     public void banUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long adminId = getLoginUserId(request, response);
 
