@@ -83,4 +83,14 @@ public class AdminController extends BaseController {
         Long adminId = getLoginUserId(request, response);
         writeJson(response, new Response<>("ok", 200, adminService.getPendingItems(adminId)));
     }
+
+    public void getAllUsers(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long adminId = getLoginUserId(request, response);
+        adminService.getAllUsers(adminId);
+    }
+
+    public void getAllItems(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long adminId = getLoginUserId(request, response);
+        adminService.getAllItems(adminId);
+    }
 }
