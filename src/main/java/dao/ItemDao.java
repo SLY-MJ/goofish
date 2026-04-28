@@ -12,8 +12,8 @@ public class ItemDao {
     public ItemDao() {
     }
 
-    public void add(Item item) throws SQLException {
-        String sql = "insert into items(seller_id,title,description,price,stock,status) values(?,?,?,?,?,?,?)";
+    public long add(Item item) throws SQLException {
+        String sql = "insert into items(seller_id,title,description,price,stock,status) values(?,?,?,?,?,?)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setLong(1, item.getSellerId());
@@ -23,6 +23,12 @@ public class ItemDao {
             ps.setInt(5, item.getStock());
             ps.setString(6, item.getStatus() == null ? ItemStatus.ON_SALE.name() : item.getStatus().name());
             ps.executeUpdate();
+
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+            return -1;
         }
     }
 
