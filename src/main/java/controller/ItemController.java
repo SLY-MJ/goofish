@@ -4,24 +4,30 @@ import bean.CommentResponse;
 import bean.ItemDetailResponse;
 import bean.ItemResponse;
 import bean.Response;
+import com.google.gson.reflect.TypeToken;
 import dao.UserDao;
 import entity.Item;
+import entity.ItemImage;
 import entity.User;
 import exception.ServiceException;
 import service.CommentService;
 import service.FavoriteService;
+import service.ItemImageService;
 import service.ItemService;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/api/items/*")
-public class ItemController extends BaseController{
+public class ItemController extends BaseController {
     private final ItemService itemService = new ItemService();
     private final FavoriteService favoriteService = new FavoriteService();
     private final CommentService commentService = new CommentService();
+    private final ItemImageService itemImageService = new ItemImageService();
     private final UserDao userDao = new UserDao();
 
     public void getMy(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
@@ -42,7 +48,8 @@ public class ItemController extends BaseController{
         Item item = itemService.findById(id);
         try {
             User seller = item == null ? null : userDao.findById(item.getSellerId());
-            writeJson(response, new Response<>("ok", 200, ItemDetailResponse.dto(item, seller)));
+            List<ItemImage> images = itemImageService.findByItemId(id);
+            writeJson(response, new Response<>("ok", 200, ItemDetailResponse.dto(item, seller, images)));
         } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -73,13 +80,34 @@ public class ItemController extends BaseController{
 
     public void publish(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
-        itemService.add(
-                userId,
-                request.getParameter("title"),
-                request.getParameter("description"),
-                Double.parseDouble(request.getParameter("price")),
-                request.getParameter("coverImage")
-        );
+        String imageUrlsJson = request.getParameter("imageUrls");
+        Type type = new TypeToken<List<String>>() {
+        }.getType();
+        List<String> imageUrls;
+        try {
+            imageUrls = imageUrlsJson == null ? null : gson.fromJson(imageUrlsJson, type);
+        } catch (RuntimeException e) {
+            throw new ServiceException(400, "Invalid imageUrls format");
+        }
+        if (imageUrls == null) {
+            imageUrls = new ArrayList<>();
+        }
+        imageUrls.removeIf(url -> url == null || url.trim().isEmpty());
+        String coverImage = request.getParameter("coverImage");
+        if (imageUrls.isEmpty() && coverImage != null && !coverImage.trim().isEmpty()) {
+            imageUrls.add(coverImage.trim());
+        }
+        if (imageUrls.isEmpty()) {
+            throw new ServiceException(400, "At least one image url is required");
+        }
+
+        long itemId = itemService.submit(
+                        userId,
+                        request.getParameter("title"),
+                        request.getParameter("description"),
+                        Double.parseDouble(request.getParameter("price"))
+                        );
+        itemImageService.add(itemId,imageUrls);
         writeJson(response, new Response<>("ok", 200, null));
     }
 
@@ -91,9 +119,7 @@ public class ItemController extends BaseController{
                 request.getParameter("title"),
                 request.getParameter("description"),
                 Double.parseDouble(request.getParameter("price")),
-                Integer.parseInt(request.getParameter("stock")),
-                request.getParameter("status"),
-                request.getParameter("coverImage")
+                Integer.parseInt(request.getParameter("stock"))
         );
         writeJson(response, new Response<>("ok", 200, null));
     }

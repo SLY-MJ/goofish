@@ -9,6 +9,8 @@ import java.util.List;
 public interface AdminServiceImp {
     User registerAdmin(long id,String username, String password) throws ServiceException;
 
+    void deleteUser(long adminId,long id) throws ServiceException;
+
     void banUser(long adminId,long id) throws ServiceException;
 
     void unBanUser(long adminId,long id) throws ServiceException;
