@@ -56,5 +56,4 @@ public class BaseController extends HttpServlet implements JsonUtil {
         }
         return ((Number) uid).longValue();
     }
-
 }
