@@ -48,6 +48,32 @@ public class NotificationDao {
         }
     }
 
+    public List<Long> getConversation(long userId) throws SQLException {
+        String sql = """
+                SELECT DISTINCT
+                  CASE
+                    WHEN send_id = ? THEN receive_id
+                    ELSE send_id
+                    END AS conversation_id
+                FROM notifications
+                WHERE type = 1
+                  AND is_deleted = 0
+                  AND (send_id = ? OR receive_id = ?);
+                """;
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setLong(1, userId);
+            ps.setLong(2, userId);
+            ps.setLong(3, userId);
+            ResultSet rs = ps.executeQuery();
+            List<Long> conversations = new ArrayList<>();
+            while (rs.next()) {
+                conversations.add(rs.getLong("conversation_id"));
+            }
+            return conversations;
+        }
+    }
+
     public List<Notification> findByUserId(long userId, int limit) throws SQLException {
         String sql = "select * from notifications where send_id=? order by id desc limit ?";
         try (Connection c = DbUtil.getConnection()) {
