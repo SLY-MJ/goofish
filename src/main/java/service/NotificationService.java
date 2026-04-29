@@ -60,6 +60,15 @@ public class NotificationService {
         }
     }
 
+    public List<Notification> getConversationMessages(long sender,long receiver) throws ServiceException {
+        validate(sender, receiver);
+        try {
+            return notificationDao.getNotifications(sender, receiver);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
     public int getUnreadCount(long userId) throws ServiceException {
         validate(userId);
         try {
