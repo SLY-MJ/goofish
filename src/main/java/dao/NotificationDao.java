@@ -74,21 +74,6 @@ public class NotificationDao {
         }
     }
 
-    public List<Notification> findByUserId(long userId, int limit) throws SQLException {
-        String sql = "select * from notifications where send_id=? order by id desc limit ?";
-        try (Connection c = DbUtil.getConnection()) {
-            PreparedStatement ps = c.prepareStatement(sql);
-            ps.setLong(1, userId);
-            ps.setInt(2, limit);
-            ResultSet rs = ps.executeQuery();
-            List<Notification> list = new ArrayList<>();
-            while (rs.next()) {
-                list.add(getNotification(rs));
-            }
-            return list;
-        }
-    }
-
     public int countUnread(long userId) throws SQLException {
         String sql = "select count(*) from notifications where receive_id=? and is_read=0";
         try (Connection c = DbUtil.getConnection()) {
