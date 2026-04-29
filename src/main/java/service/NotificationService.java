@@ -63,6 +63,7 @@ public class NotificationService {
     public List<Notification> getConversationMessages(long sender,long receiver) throws ServiceException {
         validate(sender, receiver);
         try {
+            markAllRead(receiver, sender);
             return notificationDao.getNotifications(sender, receiver);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
@@ -73,17 +74,6 @@ public class NotificationService {
         validate(userId);
         try {
             return notificationDao.countUnread(userId);
-        } catch (SQLException e) {
-            throw new ServiceException(500, e.getMessage());
-        }
-    }
-
-    public void markRead(long notificationId) throws ServiceException {
-        if (notificationId <= 0) {
-            throw new ServiceException(400, "Invalid request");
-        }
-        try {
-            notificationDao.markRead(notificationId);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
