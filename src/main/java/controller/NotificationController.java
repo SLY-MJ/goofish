@@ -19,6 +19,20 @@ public class NotificationController extends BaseController {
         writeJson(response, new Response<>("ok", 200, notificationService.getMyNotifications(userId)));
     }
 
+    public void getOne(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        long receiver=Long.parseLong(request.getParameter("id"));
+        writeJson(response, new Response<>("ok", 200, notificationService.getConversationMessages(userId, receiver)));
+    }
+
+    public void send(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long userId = getLoginUserId(request, response);
+        long receiver=Long.parseLong(request.getParameter("id"));
+        String message = request.getParameter("message");
+        notificationService.sendMessage(userId, receiver, message);
+        writeJson(response, new Response<>("ok", 200,null));
+    }
+
     public void getUnreadCount(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         int count = notificationService.getUnreadCount(userId);
@@ -27,12 +41,6 @@ public class NotificationController extends BaseController {
         writeJson(response, new Response<>("ok", 200, data));
     }
 
-    public void readOne(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
-        Long userId = getLoginUserId(request, response);
-        long id = Long.parseLong(request.getParameter("id"));
-        notificationService.markRead(userId, id);
-        writeJson(response, new Response<>("ok", 200, null));
-    }
 
     public void readAll(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
