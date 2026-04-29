@@ -1,8 +1,13 @@
 package bean;
 
 import entity.Item;
+import entity.ItemImage;
 import entity.User;
 import enums.ItemStatus;
+import exception.ServiceException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ItemDetailResponse {
     private long id;
@@ -15,8 +20,9 @@ public class ItemDetailResponse {
     private ItemStatus status;
     private String coverImage;
     private int viewCount;
+    private List<ImageResponse> images;
 
-    public static ItemDetailResponse dto(Item item, User seller) {
+    public static ItemDetailResponse dto(Item item, User seller,List<ItemImage> images) throws ServiceException {
         if (item == null) {
             return null;
         }
@@ -30,7 +36,8 @@ public class ItemDetailResponse {
                 item.getStock(),
                 item.getStatus(),
                 item.getCoverImage(),
-                item.getViewCount()
+                item.getViewCount(),
+                ImageResponse.dto(images)
         );
     }
 
@@ -38,7 +45,7 @@ public class ItemDetailResponse {
     }
 
     public ItemDetailResponse(long id, long sellerId, String sellerUsername, String title, String description,
-                              double price, int stock, ItemStatus status, String coverImage, int viewCount) {
+                              double price, int stock, ItemStatus status, String coverImage, int viewCount, List<ImageResponse> images) {
         this.id = id;
         this.sellerId = sellerId;
         this.sellerUsername = sellerUsername;
@@ -49,6 +56,7 @@ public class ItemDetailResponse {
         this.status = status;
         this.coverImage = coverImage;
         this.viewCount = viewCount;
+        this.images = images;
     }
 
     public long getId() {
@@ -129,5 +137,13 @@ public class ItemDetailResponse {
 
     public void setViewCount(int viewCount) {
         this.viewCount = viewCount;
+    }
+
+    public List<ImageResponse> getImages() {
+        return images;
+    }
+
+    public void setImages(List<ImageResponse> images) {
+        this.images = images;
     }
 }
