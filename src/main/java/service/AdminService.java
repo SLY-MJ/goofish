@@ -18,6 +18,7 @@ public class AdminService implements AdminServiceImp {
     private final UserDao userDao = new UserDao();
     private final ItemDao itemDao = new ItemDao();
     private final CommentDao commentDao = new CommentDao();
+    private final NotificationService notificationService = new NotificationService();
 
     @Override
     public User registerAdmin(long id, String username, String password) throws ServiceException {
@@ -41,9 +42,7 @@ public class AdminService implements AdminServiceImp {
             }
             user.setId(adminId);
             return user;
-        } catch (ServiceException e) {
-            throw e;
-        } catch (SQLException e) {
+        }catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
@@ -69,10 +68,20 @@ public class AdminService implements AdminServiceImp {
     }
 
     @Override
-    public void banUser(long adminId, long id) throws ServiceException {
+    public void deleteUser(long adminId, long id) throws ServiceException {
         identify(adminId);
         try {
             userDao.delete(id);
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public void banUser(long adminId, long id) throws ServiceException {
+        identify(adminId);
+        try {
+            userDao.ban(id);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -92,7 +101,18 @@ public class AdminService implements AdminServiceImp {
     public void approveItem(long adminId, long id) throws ServiceException {
         identify(adminId);
         try {
+            Item item = itemDao.findById(id);
+            if (item == null || item.isDeleted()) {
+                throw new ServiceException(404, "Item not found");
+            }
             itemDao.updateStatus(id, ItemStatus.ON_SALE);
+            itemDao.updateReason(id, null);
+            trySendSystemNotification(
+                    item.getSellerId(),
+                    "商品审核通过,你的商品《" + item.getTitle() + "》已通过审核并上架。"
+            );
+        } catch (ServiceException e) {
+            throw e;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -101,10 +121,21 @@ public class AdminService implements AdminServiceImp {
     @Override
     public void rejectItem(long adminId, long id,String reason) throws ServiceException {
         identify(adminId);
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new ServiceException(400, "Reject reason is required");
+        }
         try {
+            Item item = itemDao.findById(id);
+            if (item == null || item.isDeleted()) {
+                throw new ServiceException(404, "Item not found");
+            }
             itemDao.updateStatus(id, ItemStatus.REJECTED);
-            itemDao.updateReason(id, reason);
-        } catch (SQLException e) {
+            itemDao.updateReason(id, reason.trim());
+            trySendSystemNotification(
+                    item.getSellerId(),
+                    "商品审核驳回,你的商品《" + item.getTitle() + "》未通过审核。原因：" + reason.trim()
+            );
+        }catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
@@ -150,6 +181,14 @@ public class AdminService implements AdminServiceImp {
             }
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    private void trySendSystemNotification(long receiver,String content) {
+        try {
+            notificationService.sendSystemNotification(receiver,content);
+        } catch (ServiceException ignored) {
+            // Notification is a side-effect and should not break admin review flow.
         }
     }
 }
