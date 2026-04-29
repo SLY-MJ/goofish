@@ -31,11 +31,13 @@ public class NotificationDao {
     }
 
     public List<Notification> getNotifications(long sender, long receiver) throws SQLException {
-        String sql = "select * from notifications where send_id = ? and receive_id = ?";
+        String sql = "select * from notifications where (send_id = ? and receive_id = ?) or (send_id = ? and receive_id = ?) order by created_at desc";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, sender);
             ps.setLong(2, receiver);
+            ps.setLong(3, receiver);
+            ps.setLong(4, sender);
             ResultSet rs = ps.executeQuery();
             List<Notification> notifications = new ArrayList<>();
             while (rs.next()) {
@@ -47,7 +49,7 @@ public class NotificationDao {
     }
 
     public List<Notification> findByUserId(long userId, int limit) throws SQLException {
-        String sql = "select * from notifications where user_id=? order by id desc limit ?";
+        String sql = "select * from notifications where send_id=? order by id desc limit ?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, userId);
@@ -124,7 +126,7 @@ public class NotificationDao {
                 rs.getInt("type"),
                 rs.getString("content"),
                 rs.getInt("is_read") == 1,
-                rs.getTimestamp("create_at")
+                rs.getTimestamp("created_at")
         );
     }
 }
