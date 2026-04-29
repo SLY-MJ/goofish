@@ -11,19 +11,19 @@ public class ItemImageDao {
     public ItemImageDao() {
     }
 
-    public void add(ItemImage itemImage) throws SQLException {
+    public void add(long itemId,String url,int order) throws SQLException {
         String sql = "insert into item_images(item_id,image_url,sort_order) values(?,?,?)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
-            ps.setLong(1, itemImage.getItemId());
-            ps.setString(2, itemImage.getImageUrl());
-            ps.setInt(3, itemImage.getSortOrder());
+            ps.setLong(1, itemId);
+            ps.setString(2, url);
+            ps.setInt(3, order);
             ps.executeUpdate();
         }
     }
 
     public void deleteById(long id) throws SQLException {
-        String sql = "update item_images set isDeleted=1 where id=?";
+        String sql = "delete from item_images where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, id);
@@ -32,7 +32,7 @@ public class ItemImageDao {
     }
 
     public void deleteByItemId(long itemId) throws SQLException {
-        String sql = "update item_images set isDeleted=1 where item_id=?";
+        String sql = "delete from item_images where item_id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, itemId);
@@ -120,7 +120,7 @@ public class ItemImageDao {
                 rs.getString("image_url"),
                 rs.getInt("sort_order"),
                 rs.getString("created_at"),
-                rs.getInt("isDeleted") == 1
+                false
         );
     }
 }
