@@ -9,13 +9,13 @@ public class RefreshTokenDao {
     public RefreshTokenDao() {
     }
 
-    public void add(long userId, String tokenHash, long now) {
+    public void add(long userId, String tokenHash, long expireTime) {
         String sql = "insert into refresh_tokens (user_id,token_hash,expires_at,revoked) values(?,?,?,0)";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, userId);
             ps.setString(2, tokenHash);
-            ps.setTimestamp(3, Timestamp.from(new Date(now).toInstant()));
+            ps.setTimestamp(3, new Timestamp(expireTime));
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
