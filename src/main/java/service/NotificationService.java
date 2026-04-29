@@ -2,15 +2,19 @@ package service;
 
 import bean.NotificationResponse;
 import dao.NotificationDao;
+import dao.UserDao;
 import entity.Notification;
+import entity.User;
 import exception.ServiceException;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class NotificationService {
     private static final int DEFAULT_LIMIT = 100;
     private final NotificationDao notificationDao = new NotificationDao();
+    private final UserDao userDao = new UserDao();
 
     public void sendSystemNotification(long receiver, String content)throws ServiceException {
         validate(receiver);
@@ -39,8 +43,18 @@ public class NotificationService {
     public List<NotificationResponse> getMyNotifications(long userId) throws ServiceException {
         validate(userId);
         try {
-            List<Notification> notifications = notificationDao.findByUserId(userId, DEFAULT_LIMIT);
-            return NotificationResponse.dto(notifications);
+            List<Long> conversations=notificationDao.getConversation(userId);
+            List<NotificationResponse> responses=new ArrayList<>();
+            for(Long conversationId:conversations){
+                User user=userDao.findById(conversationId);
+                String username = "";
+                if (user != null&& user.getStatus()) {
+                    username=user.getUsername();
+                }
+                int count=notificationDao.countUnread(conversationId,userId);
+                responses.add(new NotificationResponse(conversationId,username,count));
+            }
+            return responses;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
