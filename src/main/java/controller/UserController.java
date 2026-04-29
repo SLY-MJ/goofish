@@ -4,25 +4,26 @@ import bean.Response;
 import bean.UserResponse;
 import entity.User;
 import exception.ServiceException;
+import service.CaptchaService;
 import service.FollowService;
+import service.PasswordResetService;
 import service.RefreshTokenService;
 import service.UserService;
-import util.JsonUtil;
-import util.RefreshTokenUtil;
 
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/api/user/*")
 public class UserController extends BaseController {
     private final UserService userService = new UserService();
     private final FollowService followService = new FollowService();
     private final RefreshTokenService refreshTokenService = new RefreshTokenService();
+    private final CaptchaService captchaService = new CaptchaService();
+    private final PasswordResetService passwordResetService = new PasswordResetService();
 
     public void getCurrentUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
@@ -80,8 +81,39 @@ public class UserController extends BaseController {
 
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         String token = request.getParameter("refreshToken");
-            String accessToken = refreshTokenService.refresh(token);
-            writeJson(response, new Response<>("ok", 200, accessToken));
+        String accessToken = refreshTokenService.refresh(token);
+        writeJson(response, new Response<>("ok", 200, accessToken));
+    }
+
+    public void captcha(HttpServletRequest request, HttpServletResponse response) {
+        CaptchaService.CaptchaResult captcha = captchaService.createCaptcha();
+        Map<String, String> data = new HashMap<>();
+        data.put("captchaId", captcha.captchaId());
+        data.put("imageBase64", captcha.imageBase64());
+        writeJson(response, new Response<>("ok", 200, data));
+    }
+
+    public void verifyResetIdentity(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        captchaService.verifyAndConsume(
+                request.getParameter("captchaId"),
+                request.getParameter("captchaCode")
+        );
+        String resetToken = passwordResetService.verifyIdentityAndIssueToken(
+                request.getParameter("username"),
+                request.getParameter("email"),
+                request.getParameter("phone")
+        );
+        Map<String, String> data = new HashMap<>();
+        data.put("resetToken", resetToken);
+        writeJson(response, new Response<>("ok", 200, data));
+    }
+
+    public void resetPassword(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        passwordResetService.resetPassword(
+                request.getParameter("resetToken"),
+                request.getParameter("newPassword")
+        );
+        writeJson(response, new Response<>("ok", 200, null));
     }
 
     public void update(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
