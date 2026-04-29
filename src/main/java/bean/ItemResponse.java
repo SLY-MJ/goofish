@@ -12,14 +12,15 @@ public class ItemResponse {
     private String title;
     private String coverImage;
     private double price;
-    private ItemStatus  status;
+    private ItemStatus status;
+    private String reason;
 
     public static ItemResponse dto(Item item) {
         if (item == null) {
             return null;
         }
         return new ItemResponse(item.getId(), item.getSellerId(), item.getTitle(),
-                item.getCoverImage(), item.getPrice(), item.getStatus());
+                item.getCoverImage(), item.getPrice(), item.getStatus(), item.getReason());
     }
 
     public static List<ItemResponse> dto(List<Item> items) {
@@ -36,13 +37,14 @@ public class ItemResponse {
     public ItemResponse() {
     }
 
-    public ItemResponse(long id, long sellerId, String title, String coverImage, double price, ItemStatus status) {
+    public ItemResponse(long id, long sellerId, String title, String coverImage, double price, ItemStatus status, String reason) {
         this.id = id;
         this.sellerId = sellerId;
         this.title = title;
         this.coverImage = coverImage;
         this.price = price;
         this.status = status;
+        this.reason = reason;
     }
 
     public long getId() {
@@ -74,7 +76,7 @@ public class ItemResponse {
     }
 
     public void setCoverImage(String imgUrl) {
-        this.coverImage = coverImage;
+        this.coverImage = imgUrl;
     }
 
     public double getPrice() {
@@ -91,5 +93,13 @@ public class ItemResponse {
 
     public void setStatus(ItemStatus status) {
         this.status = status;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 }
