@@ -13,6 +13,7 @@ import java.util.List;
 public class FollowService {
     private final FollowDao followDao = new FollowDao();
     private final UserDao userDao = new UserDao();
+    private final NotificationService notificationService = new NotificationService();
 
     public long add(long followerId, long followedId) throws ServiceException {
         if (followerId <= 0 || followedId <= 0) {
@@ -26,7 +27,9 @@ public class FollowService {
             if (followDao.exists(followerId, followedId)) {
                 return -1;
             }
-            return followDao.add(followerId, followedId);
+            long id = followDao.add(followerId, followedId);
+            sendFollowMessage(followedId, userDao.findById(followerId).getUsername());
+            return id;
         } catch (Exception e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -88,5 +91,10 @@ public class FollowService {
             }
         }
         return users;
+    }
+
+    private void sendFollowMessage(long userId, String username) throws ServiceException {
+        String message = "用户:" + username + "已关注你";
+        notificationService.sendSystemNotification(userId, message);
     }
 }
