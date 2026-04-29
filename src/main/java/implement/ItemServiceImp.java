@@ -7,11 +7,11 @@ import exception.ServiceException;
 import java.util.List;
 
 public interface ItemServiceImp {
-    long add(long id, String title, String description, double price, String coverImage) throws ServiceException;
+    long submit(long id, String title, String description, double price) throws ServiceException;
 
     void delete(long userId,long id) throws ServiceException;
 
-    void edit(long userId, long id, String title, String description, double price, int stock, String status, String coverImage) throws ServiceException;
+    void edit(long userId, long id, String title, String description, double price, int stock) throws ServiceException;
 
     Item findById(long id) throws ServiceException;
 

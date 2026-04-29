@@ -1,7 +1,9 @@
 package service;
 
 import dao.ItemDao;
+import dao.ItemImageDao;
 import entity.Item;
+import entity.ItemImage;
 import enums.ItemStatus;
 import exception.ServiceException;
 import implement.ItemServiceImp;
@@ -12,9 +14,10 @@ import java.util.List;
 
 public class ItemService implements ItemServiceImp {
     private final ItemDao itemDao = new ItemDao();
+    private final ItemImageDao itemImageDao = new ItemImageDao();
 
     @Override
-    public long add(long sellerId, String title, String description, double price, String coverImage) throws ServiceException {
+    public long submit(long sellerId, String title, String description, double price) throws ServiceException {
         if (sellerId <= 0) {
             throw new ServiceException(400, "Invalid seller id");
         }
@@ -25,15 +28,11 @@ public class ItemService implements ItemServiceImp {
             throw new ServiceException(400, "Price must be greater than 0");
         }
 
-        Item item = new Item(sellerId, title.trim(), description == null ? "" : description.trim(), price, 1, coverImage);
-        item.setStatus(ItemStatus.ON_SALE);
+        Item item = new Item(sellerId, title.trim(), description == null ? "" : description.trim(), price, 1, null);
+        item.setStatus(ItemStatus.SUBMITTED);
 
         try {
-            long itemId = itemDao.add(item);
-            if (itemId <= 0) {
-                throw new ServiceException(500, "Failed to create item");
-            }
-            return itemId;
+            return itemDao.add(item);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -56,7 +55,7 @@ public class ItemService implements ItemServiceImp {
     }
 
     @Override
-    public void edit(long userId, long itemId, String title, String description, double price, int stock, String status, String coverImage)
+    public void edit(long userId, long itemId, String title, String description, double price, int stock)
             throws ServiceException {
         try {
             Item item = itemDao.findById(itemId);
@@ -79,12 +78,7 @@ public class ItemService implements ItemServiceImp {
             if (stock > 0) {
                 itemDao.updateStock(itemId, stock);
             }
-            if (status != null && !status.trim().isEmpty()) {
-                itemDao.updateStatus(itemId, ItemStatus.valueOf(status.trim()));
-            }
-            if (coverImage != null && !coverImage.trim().isEmpty()) {
-                itemDao.updateCoverImage(itemId, coverImage.trim());
-            }
+            itemDao.updateStatus(itemId,ItemStatus.SUBMITTED);
         } catch (IllegalArgumentException e) {
             throw new ServiceException(400, "Invalid item status");
         } catch (SQLException e) {
@@ -96,10 +90,14 @@ public class ItemService implements ItemServiceImp {
     public Item findById(long id) throws ServiceException {
         try {
             Item item = itemDao.findById(id);
-            if (item == null) {
+            if (item == null || isDeleted(item)) {
                 throw new ServiceException(404, "Item not found");
             }
-            return item;
+            Item normalized = getItem(item);
+            if (normalized == null) {
+                throw new ServiceException(404, "Item not found");
+            }
+            return normalized;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -145,6 +143,7 @@ public class ItemService implements ItemServiceImp {
         }
     }
 
+    @Override
     public void increaseViewCount(long itemId) throws ServiceException {
         try {
             itemDao.increaseViewCount(itemId);
@@ -163,13 +162,29 @@ public class ItemService implements ItemServiceImp {
         }
         List<Item> list = new ArrayList<>();
         for (Item item : items) {
-            if (!isDeleted(item)) {
-                list.add(item);
+            Item check=getItem(item);
+            if (check != null) {
+                list.add(check);
             }
         }
         if (list.isEmpty()) {
             throw new ServiceException(404, "No items found");
         }
         return list;
+    }
+
+    private Item getItem(Item item) throws ServiceException {
+        if (!isDeleted(item)) {
+            try {
+                ItemImage image = itemImageDao.findByItemIdAndOrder(item.getId(),1);
+                if (image != null&&image.getImageUrl()!=null) {
+                    item.setCoverImage(image.getImageUrl());
+                }
+            } catch (SQLException e) {
+                throw new ServiceException(500,e.getMessage());
+            }
+            return item;
+        }
+        return null;
     }
 }
