@@ -16,7 +16,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashSet;
 import java.util.Set;
 
 //过滤器
@@ -28,7 +27,9 @@ public class AppFilter implements Filter, JsonUtil {
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             "http://localhost:8080",
-            "http://127.0.0.1:8080"
+            "http://127.0.0.1:8080",
+            "http://localhost:8081",
+            "http://127.0.0.1:8081"
     );
 
     @Override
@@ -127,7 +128,19 @@ public class AppFilter implements Filter, JsonUtil {
         String method = request.getMethod().toUpperCase();
 
         // 认证相关
-        if ("POST".equals(method) && ("/api/user/login".equals(path) || "/api/user/register".equals(path)||"/api/user/refreshToken".equals(path))) {
+        if ("POST".equals(method) && (
+                "/api/user/login".equals(path)
+                        || "/api/user/register".equals(path)
+                        || "/api/user/refreshToken".equals(path)
+                        || "/api/user/verifyResetIdentity".equals(path)
+                        || "/api/user/resetPassword".equals(path)
+                        || "/api/user/logout".equals(path)
+        )) {
+            return true;
+        }
+
+        if ("GET".equals(method) && ("/api/user/captcha".equals(path)||
+                            "/api/user/getDetail".equals(path))) {
             return true;
         }
 
