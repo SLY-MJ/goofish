@@ -29,18 +29,35 @@ public class UserDao {
         return -1;
     }
 
-    public boolean delete(long id) throws SQLException {
+    public void delete(long id) throws SQLException {
+        String sql = "update users set status =2 where id=?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setLong(1, id);
+            ps.executeUpdate();
+        }
+    }
+
+    public void ban(long id) throws SQLException {
         String sql = "update users set status =0 where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, id);
             ps.executeUpdate();
-            return true;
+        }
+    }
+
+    public void restore(long id) throws SQLException {
+        String sql = "update users set status =1 where id=?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setLong(1, id);
+            ps.executeUpdate();
         }
     }
 
     public User findById(long id) throws SQLException {
-        String sql = "select * from users where id=?";
+        String sql = "select * from users where id=? and status<2";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, id);
@@ -53,7 +70,7 @@ public class UserDao {
     }
 
     public User findByUsername(String username) throws SQLException {
-        String sql = "select * from users where username=?";
+        String sql = "select * from users where username=? and status<2";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, username);
@@ -66,7 +83,7 @@ public class UserDao {
     }
 
     public List<User> findByRole(UserRole role) throws SQLException {
-        String sql = "select * from users where role =?";
+        String sql = "select * from users where role =? and status<2";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, role.name());
@@ -80,7 +97,7 @@ public class UserDao {
     }
 
     public List<User> findAll() throws SQLException {
-        String sql = "select * from users";
+        String sql = "select * from users where status<2";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ResultSet rs = ps.executeQuery();
@@ -93,7 +110,7 @@ public class UserDao {
     }
 
     public List<User> search(String username) throws SQLException {
-        String sql = "select * from users where username like ?";
+        String sql = "select * from users where username like ?and status<2";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, "%"+username+"%");
@@ -124,18 +141,17 @@ public class UserDao {
         return user;
     }
 
-    public boolean updateUsername(User user) throws SQLException {
+    public void updateUsername(User user) throws SQLException {
         String sql = "update users set username=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, user.getUsername());
             ps.setLong(2, user.getId());
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updatePassword(User user) throws SQLException {
+    public void updatePassword(User user) throws SQLException {
         String sql = "update users set password_hash=?,salt=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
@@ -143,66 +159,60 @@ public class UserDao {
             ps.setString(2, user.getSalt());
             ps.setLong(3, user.getId());
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updateEmail(User user) throws SQLException {
+    public void updateEmail(User user) throws SQLException {
         String sql = "update users set email=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, user.getEmail());
             ps.setLong(2, user.getId());
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updatePhone(User user) throws SQLException {
+    public void updatePhone(User user) throws SQLException {
         String sql = "update users set phone=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, user.getPhone());
             ps.setLong(2, user.getId());
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updateWalletBalance(User user) throws SQLException {
+    public void updateWalletBalance(User user) throws SQLException {
         String sql = "update users set wallet_balance=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setDouble(1, user.getWalletBalance());
             ps.setLong(2, user.getId());
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updateStatus(User user) throws SQLException {
+    public void updateStatus(User user) throws SQLException {
         String sql = "update users set status=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setBoolean(1, user.getStatus());
             ps.setLong(2, user.getId());
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean updateInformation(User user) throws SQLException {
+    public void updateInformation(User user) throws SQLException {
         String sql = "update users set information=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setString(1, user.getInformation());
             ps.setLong(2, user.getId());
             ps.executeUpdate();
-            return true;
         }
     }
 
-    public boolean update(User user) throws SQLException {
+    public void update(User user) throws SQLException {
         String sql = "update users set username=?,email=?,phone=?,password_hash=?,salt=?,role=?,information=?,wallet_balance=?,status=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
@@ -217,7 +227,6 @@ public class UserDao {
             ps.setBoolean(9, user.getStatus());
             ps.setLong(10, user.getId());
             ps.executeUpdate();
-            return true;
         }
     }
 }
