@@ -9,36 +9,18 @@ import java.util.List;
 public class NotificationResponse {
     private long id;
     private String username;
+    private String latestMessage;
+    private Timestamp latestTime;
     private int unReadCount;
-
-//    public static NotificationResponse dto(Notification notification) {
-//        if (notification == null) {
-//            return null;
-//        }
-//        return new NotificationResponse(
-//                notification.getId(),
-//                null,
-//                0
-//        );
-//    }
-//
-//    public static List<NotificationResponse> dto(List<Notification> notifications) {
-//        if (notifications == null) {
-//            return null;
-//        }
-//        List<NotificationResponse> list = new ArrayList<>();
-//        for (Notification notification : notifications) {
-//            list.add(dto(notification));
-//        }
-//        return list;
-//    }
 
     public NotificationResponse() {
     }
 
-    public NotificationResponse(long id, String username, int unReadCount) {
+    public NotificationResponse(long id, String username,String latestMessage,Timestamp latestTime, int unReadCount) {
         this.id = id;
         this.username = username;
+        this.latestMessage = latestMessage;
+        this.latestTime = latestTime;
         this.unReadCount = unReadCount;
     }
 
@@ -64,5 +46,22 @@ public class NotificationResponse {
 
     public void setUnReadCount(int unReadCount) {
         this.unReadCount = unReadCount;
+    }
+
+
+    public String getLatestMessage() {
+        return latestMessage;
+    }
+
+    public void setLatestMessage(String latestMessage) {
+        this.latestMessage = latestMessage;
+    }
+
+    public Timestamp getLatestTime() {
+        return latestTime;
+    }
+
+    public void setLatestTime(Timestamp latestTime) {
+        this.latestTime = latestTime;
     }
 }
