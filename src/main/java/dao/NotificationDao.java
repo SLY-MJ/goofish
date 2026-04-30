@@ -88,7 +88,7 @@ public class NotificationDao {
     }
 
     public int countUnread(long sender,long receiver) throws SQLException {
-        String sql = "select count(*) from notifications where send_id = ? and receive_id = ?";
+        String sql = "select count(*) from notifications where send_id = ? and receive_id = ?and is_read=0";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, sender);
