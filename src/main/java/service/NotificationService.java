@@ -6,53 +6,49 @@ import dao.UserDao;
 import entity.Notification;
 import entity.User;
 import exception.ServiceException;
+import implement.NotificationServiceImp;
 
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NotificationService {
-    private static final int DEFAULT_LIMIT = 100;
+public class NotificationService implements NotificationServiceImp {
     private final NotificationDao notificationDao = new NotificationDao();
     private final UserDao userDao = new UserDao();
 
-    public void sendSystemNotification(long receiver, String content)throws ServiceException {
+    public record NotificationRecord(long userId, String latestMessage, Timestamp latestTime) {
+    }
+
+    @Override
+    public void sendSystemNotification(long receiver, String content) throws ServiceException {
         validate(receiver);
-        try {
-            long id = notificationDao.add(0, receiver, 0, content);
-            if (id <= 0) {
-                throw new ServiceException(500, "Failed to create notification");
-            }
-        }catch (SQLException e) {
-            throw new ServiceException(500, e.getMessage());
-        }
+        writeMessage(0, receiver, 0, content);
     }
 
-    public void sendMessage(long sender,long receiver, String content)throws ServiceException {
+    @Override
+    public void sendMessage(long sender, long receiver, String content) throws ServiceException {
         validate(sender, receiver);
-        try{
-            long id=notificationDao.add(sender, receiver, 1, content);
-            if (id <= 0) {
-                throw new ServiceException(500, "Failed to create notification");
-            }
-        }catch (SQLException e) {
-            throw new ServiceException(500, e.getMessage());
-        }
+        writeMessage(sender, receiver, 1, content);
     }
 
+    @Override
     public List<NotificationResponse> getMyNotifications(long userId) throws ServiceException {
         validate(userId);
         try {
-            List<Long> conversations=notificationDao.getConversation(userId);
-            List<NotificationResponse> responses=new ArrayList<>();
-            for(Long conversationId:conversations){
-                User user=userDao.findById(conversationId);
+            List<NotificationRecord> conversations = notificationDao.getConversation(userId);
+            List<NotificationResponse> responses = new ArrayList<>();
+            for (NotificationRecord record : conversations) {
+                long id = record.userId;
+                User user = userDao.findById(id);
                 String username = "";
-                if (user != null&& user.getStatus()) {
-                    username=user.getUsername();
+                if (user != null && user.getStatus()) {
+                    username = user.getUsername();
                 }
-                int count=notificationDao.countUnread(conversationId,userId);
-                responses.add(new NotificationResponse(conversationId,username,count));
+                int count = notificationDao.countUnread(id, userId);
+                String content = record.latestMessage;
+                Timestamp created = record.latestTime;
+                responses.add(new NotificationResponse(id, username, content, created, count));
             }
             return responses;
         } catch (SQLException e) {
@@ -60,7 +56,8 @@ public class NotificationService {
         }
     }
 
-    public List<Notification> getConversationMessages(long sender,long receiver) throws ServiceException {
+    @Override
+    public List<Notification> getConversationMessages(long sender, long receiver) throws ServiceException {
         validate(sender, receiver);
         try {
             markAllRead(receiver, sender);
@@ -88,10 +85,11 @@ public class NotificationService {
         }
     }
 
-    public void markAllRead(long sender,long receiver) throws ServiceException {
+    @Override
+    public void markAllRead(long sender, long receiver) throws ServiceException {
         validate(sender, receiver);
         try {
-            notificationDao.markAllRead(sender,receiver);
+            notificationDao.markAllRead(sender, receiver);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -106,5 +104,16 @@ public class NotificationService {
     private void validate(long sender, long receiver) throws ServiceException {
         validate(sender);
         validate(receiver);
+    }
+
+    private void writeMessage(long sender, long receiver,int type, String content) throws ServiceException {
+        try {
+            long id = notificationDao.add(sender, receiver, type, content);
+            if (id <= 0) {
+                throw new ServiceException(500, "Failed to create notification");
+            }
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
     }
 }
