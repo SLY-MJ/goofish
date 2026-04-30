@@ -185,6 +185,17 @@ public class ItemDao {
         }
     }
 
+
+    public void updateWeight(long id, int weight) throws SQLException {
+        String sql = "update items set weight=? where id=?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setInt(1, weight);
+            ps.setLong(2, id);
+            ps.executeUpdate();
+        }
+    }
+
     public void increaseViewCount(long id) throws SQLException {
         String sql = "update items set view_count=view_count+1 where id=?";
         try (Connection c = DbUtil.getConnection()) {
