@@ -28,7 +28,7 @@ public class NotificationDao {
     }
 
     public List<Notification> getNotifications(long sender, long receiver) throws SQLException {
-        String sql = "select * from notifications where (send_id = ? and receive_id = ?) or (send_id = ? and receive_id = ?) order by created_at asc";
+        String sql = "select * from notifications where ((send_id = ? and receive_id = ?) or (send_id = ? and receive_id = ?) )and is_deleted =0 order by created_at asc";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
             ps.setLong(1, sender);
