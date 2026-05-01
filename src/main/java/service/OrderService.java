@@ -38,21 +38,16 @@ public class OrderService implements OrderServiceImp {
             if (item.getStatus() != ItemStatus.ON_SALE || item.getStock() <= 0) {
                 throw new ServiceException(400, "Item is not available for purchase");
             }
-
-            List<Order> existingOrders = orderDao.findByItemId(itemId);
-            for (Order existingOrder : existingOrders) {
-                if (existingOrder.getStatus() == OrderStatus.CREATED || existingOrder.getStatus() == OrderStatus.PAID) {
-                    throw new ServiceException(400, "This item already has an active order");
-                }
-            }
-
             long orderId = orderDao.add(itemId, buyerId, item.getSellerId(), item.getPrice(), OrderStatus.CREATED);
             if (orderId <= 0) {
                 throw new ServiceException(500, "Failed to create order");
             }
-        } catch (ServiceException e) {
-            throw e;
-        } catch (SQLException e) {
+            int stock = item.getStock();
+            itemDao.updateStock(itemId, stock-1);
+            if (stock==1){
+                itemDao.updateStatus(itemId, ItemStatus.SOLD);
+            }
+        }catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
