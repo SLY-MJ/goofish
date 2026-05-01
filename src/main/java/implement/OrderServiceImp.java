@@ -7,7 +7,7 @@ import exception.ServiceException;
 import java.util.List;
 
 public interface OrderServiceImp {
-    void add(long itemId, long buyerId, long sellerIdu) throws ServiceException;
+    void add(long itemId, long buyerId, int number) throws ServiceException;
 
     void delete(long id, long operatorUserId) throws ServiceException;
 

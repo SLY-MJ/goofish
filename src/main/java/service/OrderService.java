@@ -22,7 +22,7 @@ public class OrderService implements OrderServiceImp {
     private final ItemDao itemDao = new ItemDao();
 
     @Override
-    public void add(long itemId, long buyerId, long ignoredSellerId) throws ServiceException {
+    public void add(long itemId, long buyerId, int number) throws ServiceException {
         if (itemId <= 0 || buyerId <= 0) {
             throw new ServiceException(400, "Invalid order request");
         }
@@ -35,34 +35,29 @@ public class OrderService implements OrderServiceImp {
             if (item.getSellerId() == buyerId) {
                 throw new ServiceException(400, "You cannot buy your own item");
             }
-            if (item.getStatus() != ItemStatus.ON_SALE || item.getStock() <= 0) {
+            int stock = item.getStock();
+            if (item.getStatus() != ItemStatus.ON_SALE) {
                 throw new ServiceException(400, "Item is not available for purchase");
             }
-            long orderId = orderDao.add(itemId, buyerId, item.getSellerId(), item.getPrice(), OrderStatus.CREATED);
+            if (stock < number) {
+                throw new ServiceException(400, "Insufficient stock");
+            }
+            long orderId = orderDao.add(itemId, buyerId, item.getSellerId(), number, item.getPrice(), OrderStatus.CREATED);
             if (orderId <= 0) {
                 throw new ServiceException(500, "Failed to create order");
             }
-            int stock = item.getStock();
-            itemDao.updateStock(itemId, stock-1);
-            if (stock==1){
+            itemDao.updateStock(itemId, stock - number);
+            if (stock == number) {
                 itemDao.updateStatus(itemId, ItemStatus.SOLD);
             }
-        }catch (SQLException e) {
+        } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
 
     @Override
     public void delete(long orderId, long operatorUserId) throws ServiceException {
-        if (orderId <= 0 || operatorUserId <= 0) {
-            throw new ServiceException(400, "Invalid order request");
-        }
-
-        Order order = getOrder(orderId);
-        if (order.getBuyerId() != operatorUserId && order.getSellerId() != operatorUserId) {
-            throw new ServiceException(403, "No permission to delete this order");
-        }
-
+        verify(orderId, operatorUserId);
         try {
             orderDao.delete(orderId);
         } catch (SQLException e) {
@@ -94,7 +89,6 @@ public class OrderService implements OrderServiceImp {
 
     @Override
     public void changeStatus(long id, OrderStatus status) throws ServiceException {
-        getOrder(id);
         try {
             orderDao.updateStatus(id, status);
         } catch (SQLException e) {
@@ -142,33 +136,34 @@ public class OrderService implements OrderServiceImp {
             userDao.updateWalletBalance(buyer);
             userDao.updateWalletBalance(seller);
             int stock = item.getStock();
-            long itemId=item.getId();
-            if (stock<=1) {
+            long itemId = item.getId();
+            if (stock <= 1) {
                 itemDao.updateStatus(itemId, ItemStatus.SOLD);
             }
             itemDao.updateStock(itemId, stock);
             orderDao.updateStatus(orderId, OrderStatus.PAID);
-        }catch (SQLException e) {
+        } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
 
     @Override
     public void cancel(long orderId, long operatorUserId) throws ServiceException {
-        if (orderId <= 0 || operatorUserId <= 0) {
-            throw new ServiceException(400, "Invalid order request");
-        }
-
-        Order order = getOrder(orderId);
-        if (order.getBuyerId() != operatorUserId) {
-            throw new ServiceException(403, "No permission to cancel this order");
-        }
+        verify(orderId, operatorUserId);
+        Order order=getOrder(orderId);
         if (order.getStatus() == OrderStatus.PAID) {
             throw new ServiceException(400, "Paid orders cannot be cancelled");
         }
+        int number=order.getNumber();
+        long itemID=order.getItemId();
 
         try {
             orderDao.updateStatus(orderId, OrderStatus.CANCELLED);
+            int stock=itemDao.findById(itemID).getStock();
+            itemDao.updateStock(itemID, stock + number);
+            if (stock==0){
+                itemDao.updateStatus(itemID, ItemStatus.ON_SALE);
+            }
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -205,6 +200,16 @@ public class OrderService implements OrderServiceImp {
             return responses;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    private void verify(long orderID, long id) throws ServiceException {
+        if (orderID <= 0 || id <= 0) {
+            throw new ServiceException(400, "Invalid order request");
+        }
+        Order order = getOrder(orderID);
+        if (order.getBuyerId() != id && order.getSellerId() != id) {
+            throw new ServiceException(403, "No permission to operate this order");
         }
     }
 
