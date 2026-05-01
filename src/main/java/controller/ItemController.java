@@ -105,7 +105,8 @@ public class ItemController extends BaseController {
                         userId,
                         request.getParameter("title"),
                         request.getParameter("description"),
-                        Double.parseDouble(request.getParameter("price"))
+                        Double.parseDouble(request.getParameter("price")),
+                        Integer.parseInt(request.getParameter("stock"))
                         );
         itemImageService.add(itemId,imageUrls);
         writeJson(response, new Response<>("ok", 200, null));
