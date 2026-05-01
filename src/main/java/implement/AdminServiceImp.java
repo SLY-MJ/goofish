@@ -23,9 +23,15 @@ public interface AdminServiceImp {
 
     void rejectItem(long adminId,long id,String reason) throws ServiceException;
 
+    void updateWeight(long adminId,long itemId,int weight) throws ServiceException;
+
+    int getWeight(long adminId,long itemId) throws ServiceException;
+
     List<Item> getPendingItems(long adminId) throws ServiceException;
 
     List<Item> getAllItems(long adminId) throws ServiceException;
 
     List<User> getAllUsers(long adminId) throws ServiceException;
+
+
 }

@@ -2,8 +2,10 @@ package service;
 
 import dao.CommentDao;
 import dao.ItemDao;
+import dao.ItemImageDao;
 import dao.UserDao;
 import entity.Item;
+import entity.ItemImage;
 import entity.User;
 import enums.ItemStatus;
 import enums.UserRole;
@@ -17,6 +19,7 @@ import java.util.List;
 public class AdminService implements AdminServiceImp {
     private final UserDao userDao = new UserDao();
     private final ItemDao itemDao = new ItemDao();
+    private final ItemImageDao  itemImageDao = new ItemImageDao();
     private final CommentDao commentDao = new CommentDao();
     private final NotificationService notificationService = new NotificationService();
 
@@ -42,7 +45,7 @@ public class AdminService implements AdminServiceImp {
             }
             user.setId(adminId);
             return user;
-        }catch (SQLException e) {
+        } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
@@ -119,7 +122,7 @@ public class AdminService implements AdminServiceImp {
     }
 
     @Override
-    public void rejectItem(long adminId, long id,String reason) throws ServiceException {
+    public void rejectItem(long adminId, long id, String reason) throws ServiceException {
         identify(adminId);
         if (reason == null || reason.trim().isEmpty()) {
             throw new ServiceException(400, "Reject reason is required");
@@ -135,7 +138,17 @@ public class AdminService implements AdminServiceImp {
                     item.getSellerId(),
                     "商品审核驳回,你的商品《" + item.getTitle() + "》未通过审核。原因：" + reason.trim()
             );
-        }catch (SQLException e) {
+        } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateWeight(long adminId, long itemId, int weight) throws ServiceException {
+        identify(adminId);
+        try {
+            itemDao.updateWeight(itemId, weight);
+        } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
@@ -154,7 +167,9 @@ public class AdminService implements AdminServiceImp {
     public List<Item> getAllItems(long adminId) throws ServiceException {
         identify(adminId);
         try {
-            return itemDao.findAll();
+            List<Item> items = itemDao.findAll();
+            addImage(items);
+            return items;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -166,6 +181,20 @@ public class AdminService implements AdminServiceImp {
         try {
             return userDao.findAll();
         } catch (SQLException e) {
+            throw new ServiceException(500, e.getMessage());
+        }
+    }
+
+    @Override
+    public int getWeight(long adminId, long itemId) throws ServiceException {
+        identify(adminId);
+        try {
+            int weight= itemDao.findWight(itemId);
+            if (weight < 0) {
+                throw new ServiceException(404, "Item not found");
+            }
+            return weight;
+        }catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
@@ -184,11 +213,34 @@ public class AdminService implements AdminServiceImp {
         }
     }
 
-    private void trySendSystemNotification(long receiver,String content) {
+    private void trySendSystemNotification(long receiver, String content) {
         try {
-            notificationService.sendSystemNotification(receiver,content);
+            notificationService.sendSystemNotification(receiver, content);
         } catch (ServiceException ignored) {
             // Notification is a side-effect and should not break admin review flow.
+        }
+    }
+
+    private void addImage(Item item)throws ServiceException {
+        if (item!=null){
+            long id = item.getId();
+            try {
+                ItemImage image=itemImageDao.findByItemIdAndOrder(id,1);
+                if (image!=null){
+                    String url=image.getImageUrl();
+                    item.setCoverImage(url);
+                }
+            } catch (SQLException e) {
+                throw new ServiceException(500,e.getMessage());
+            }
+        }
+    }
+
+    private void addImage(List<Item> items)throws ServiceException {
+        if (items!=null){
+            for (Item item : items) {
+                addImage(item);
+            }
         }
     }
 }
