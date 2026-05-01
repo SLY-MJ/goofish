@@ -7,6 +7,7 @@ public class Order {
     private long itemId;
     private long buyerId;
     private long sellerId;
+    private int number;
     private double amount;
     private OrderStatus status;//"CREATED,'PAID''CANCELLED''REFUNDED'
     private String createTime;
@@ -14,19 +15,21 @@ public class Order {
     public Order() {
     }
 
-    public Order(long itemId, long buyerId, long sellerId, int amount, OrderStatus status) {
+    public Order(long itemId, long buyerId, long sellerId,int number, int amount, OrderStatus status) {
         this.itemId = itemId;
         this.buyerId = buyerId;
         this.sellerId = sellerId;
+        this.number = number;
         this.amount = amount;
         this.status = status;
     }
 
-    public Order(long id,  long itemId, long buyerId, long sellerId, double amount, OrderStatus status, String createTime) {
+    public Order(long id,  long itemId, long buyerId, long sellerId,int number, double amount, OrderStatus status, String createTime) {
         this.id = id;
         this.itemId = itemId;
         this.buyerId = buyerId;
         this.sellerId = sellerId;
+        this.number = number;
         this.amount = amount;
         this.status = status;
         this.createTime = createTime;
@@ -86,5 +89,13 @@ public class Order {
 
     public void setCreateTime(String createTime) {
         this.createTime = createTime;
+    }
+
+    public int getNumber() {
+        return number;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
     }
 }
