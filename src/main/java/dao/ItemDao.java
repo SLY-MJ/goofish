@@ -110,6 +110,19 @@ public class ItemDao {
         }
     }
 
+    public int findWight(long id) throws SQLException {
+        String sql = "select weight from items where id=?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setLong(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return -1;
+        }
+    }
+
     public void update(Item item) throws SQLException {
         String sql = "update items set seller_id=?,title=?,description=?,price=?,stock=?,status=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
