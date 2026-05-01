@@ -146,12 +146,14 @@ public class OrderService implements OrderServiceImp {
             seller.setWalletBalance(seller.getWalletBalance() + order.getAmount());
             userDao.updateWalletBalance(buyer);
             userDao.updateWalletBalance(seller);
-            itemDao.updateStock(item.getId(), 0);
-            itemDao.updateStatus(item.getId(), ItemStatus.SOLD);
+            int stock = item.getStock();
+            long itemId=item.getId();
+            if (stock<=1) {
+                itemDao.updateStatus(itemId, ItemStatus.SOLD);
+            }
+            itemDao.updateStock(itemId, stock);
             orderDao.updateStatus(orderId, OrderStatus.PAID);
-        } catch (ServiceException e) {
-            throw e;
-        } catch (SQLException e) {
+        }catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }

@@ -17,7 +17,7 @@ public class ItemService implements ItemServiceImp {
     private final ItemImageDao itemImageDao = new ItemImageDao();
 
     @Override
-    public long submit(long sellerId, String title, String description, double price) throws ServiceException {
+    public long submit(long sellerId, String title, String description, double price,int stock) throws ServiceException {
         if (sellerId <= 0) {
             throw new ServiceException(400, "Invalid seller id");
         }
@@ -27,8 +27,11 @@ public class ItemService implements ItemServiceImp {
         if (price <= 0) {
             throw new ServiceException(400, "Price must be greater than 0");
         }
+        if (stock <= 0) {
+            stock=1;
+        }
 
-        Item item = new Item(sellerId, title.trim(), description == null ? "" : description.trim(), price, 1, null);
+        Item item = new Item(sellerId, title.trim(), description == null ? "" : description.trim(), price, stock, null);
         item.setStatus(ItemStatus.SUBMITTED);
 
         try {

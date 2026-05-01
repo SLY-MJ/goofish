@@ -7,7 +7,7 @@ import exception.ServiceException;
 import java.util.List;
 
 public interface ItemServiceImp {
-    long submit(long id, String title, String description, double price) throws ServiceException;
+    long submit(long id, String title, String description, double price,int stock) throws ServiceException;
 
     void delete(long userId,long id) throws ServiceException;
 
