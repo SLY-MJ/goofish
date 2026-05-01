@@ -182,12 +182,12 @@ public class UserDao {
         }
     }
 
-    public void updateWalletBalance(User user) throws SQLException {
+    public void updateWalletBalance(long id,double price) throws SQLException {
         String sql = "update users set wallet_balance=? where id=?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
-            ps.setDouble(1, user.getWalletBalance());
-            ps.setLong(2, user.getId());
+            ps.setDouble(1, price);
+            ps.setLong(2, id);
             ps.executeUpdate();
         }
     }
