@@ -23,10 +23,7 @@ public class OrderService implements OrderServiceImp {
 
     @Override
     public void add(long itemId, long buyerId, int number) throws ServiceException {
-        if (itemId <= 0 || buyerId <= 0) {
-            throw new ServiceException(400, "Invalid order request");
-        }
-
+        verify(itemId, buyerId);
         try {
             Item item = itemDao.findById(itemId);
             if (item == null) {
@@ -67,10 +64,7 @@ public class OrderService implements OrderServiceImp {
 
     @Override
     public void deleteByItemId(long itemId, long operatorUserId) throws ServiceException {
-        if (itemId <= 0 || operatorUserId <= 0) {
-            throw new ServiceException(400, "Invalid order request");
-        }
-
+        verify(itemId, operatorUserId);
         try {
             List<Order> orders = orderDao.findByItemId(itemId);
             for (Order order : orders) {
@@ -80,9 +74,7 @@ public class OrderService implements OrderServiceImp {
                 }
             }
             throw new ServiceException(404, "Order not found");
-        } catch (ServiceException e) {
-            throw e;
-        } catch (SQLException e) {
+        }catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
@@ -98,28 +90,20 @@ public class OrderService implements OrderServiceImp {
 
     @Override
     public void trade(long orderId, long operatorUserId) throws ServiceException {
-        if (orderId <= 0 || operatorUserId <= 0) {
-            throw new ServiceException(400, "Invalid order request");
-        }
-
+        verify(orderId, operatorUserId);
+        isBuyer(orderId, operatorUserId);
+        payable(orderId);
         try {
-            Order order = getOrder(orderId);
-            if (order.getBuyerId() != operatorUserId) {
-                throw new ServiceException(403, "No permission to pay this order");
-            }
-            if (order.getStatus() == OrderStatus.PAID) {
-                throw new ServiceException(400, "Order is already paid");
-            }
-            if (order.getStatus() == OrderStatus.CANCELLED) {
-                throw new ServiceException(400, "Cancelled orders cannot be paid");
-            }
-
+            Order order =getOrder(orderId);
+            int number = order.getNumber();
+            double amount=order.getAmount();
+            double price=number*amount;
             User buyer = userDao.findById(order.getBuyerId());
             User seller = userDao.findById(order.getSellerId());
             if (buyer == null || seller == null) {
                 throw new ServiceException(404, "Order user not found");
             }
-            if (buyer.getWalletBalance() < order.getAmount()) {
+            if (buyer.getWalletBalance() < price) {
                 throw new ServiceException(400, "Insufficient wallet balance");
             }
 
@@ -127,20 +111,10 @@ public class OrderService implements OrderServiceImp {
             if (item == null) {
                 throw new ServiceException(404, "Item not found");
             }
-            if (item.getStatus() != ItemStatus.ON_SALE || item.getStock() <= 0) {
-                throw new ServiceException(400, "Item is no longer available");
-            }
-
-            buyer.setWalletBalance(buyer.getWalletBalance() - order.getAmount());
-            seller.setWalletBalance(seller.getWalletBalance() + order.getAmount());
-            userDao.updateWalletBalance(buyer);
-            userDao.updateWalletBalance(seller);
-            int stock = item.getStock();
-            long itemId = item.getId();
-            if (stock <= 1) {
-                itemDao.updateStatus(itemId, ItemStatus.SOLD);
-            }
-            itemDao.updateStock(itemId, stock);
+            buyer.setWalletBalance(buyer.getWalletBalance() - price);
+            seller.setWalletBalance(seller.getWalletBalance() + price);
+            userDao.updateWalletBalance(buyer.getId(), buyer.getWalletBalance()-price);
+            userDao.updateWalletBalance(seller.getId(), seller.getWalletBalance()+price);
             orderDao.updateStatus(orderId, OrderStatus.PAID);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
@@ -203,14 +177,30 @@ public class OrderService implements OrderServiceImp {
         }
     }
 
-    private void verify(long orderID, long id) throws ServiceException {
-        if (orderID <= 0 || id <= 0) {
+    private void verify(long id1, long id2) throws ServiceException {
+        verify(id1);
+        verify(id2);
+    }
+
+    private void verify(long id) throws ServiceException {
+        if (id <= 0) {
             throw new ServiceException(400, "Invalid order request");
         }
+    }
+
+    private void isBuyer(long orderID,long userID) throws ServiceException {
         Order order = getOrder(orderID);
-        if (order.getBuyerId() != id && order.getSellerId() != id) {
+        if (order.getSellerId() != userID) {
             throw new ServiceException(403, "No permission to operate this order");
         }
+    }
+
+    private void payable(long orderID) throws ServiceException {
+        Order order = getOrder(orderID);
+        if (order.getStatus()!= OrderStatus.CREATED){
+            throw new ServiceException(400, "Order is not payable");
+        }
+
     }
 
     private Order getOrder(long orderId) throws ServiceException {
