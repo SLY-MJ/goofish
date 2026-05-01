@@ -1,5 +1,6 @@
 package controller;
 
+import bean.ItemResponse;
 import bean.Response;
 import bean.UserResponse;
 import entity.User;
@@ -83,6 +84,19 @@ public class AdminController extends BaseController {
         writeJson(response, new Response<>("审核驳回", 200, null));
     }
 
+    public void updateItem(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long adminId = getLoginUserId(request, response);
+        long itemId = Long.parseLong(request.getParameter("id"));
+        int weight = Integer.parseInt(request.getParameter("weight"));
+        adminService.updateWeight(adminId, itemId, weight);
+    }
+
+    public void getWeight(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
+        Long adminId = getLoginUserId(request, response);
+        long itemId = Long.parseLong(request.getParameter("id"));
+        writeJson(response,new Response<>("ok",200,adminService.getWeight(adminId, itemId)));
+    }
+
     public void getPendingItem(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long adminId = getLoginUserId(request, response);
         writeJson(response, new Response<>("ok", 200, adminService.getPendingItems(adminId)));
@@ -90,11 +104,11 @@ public class AdminController extends BaseController {
 
     public void getAllUsers(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long adminId = getLoginUserId(request, response);
-        adminService.getAllUsers(adminId);
+        writeJson(response,new Response<>("ok",200,adminService.getAllUsers(adminId)));
     }
 
     public void getAllItems(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long adminId = getLoginUserId(request, response);
-        adminService.getAllItems(adminId);
+        writeJson(response,new Response<>("ok",200, ItemResponse.dto(adminService.getAllItems(adminId))));
     }
 }
