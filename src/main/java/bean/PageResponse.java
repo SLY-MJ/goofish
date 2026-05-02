@@ -4,15 +4,15 @@ import java.util.List;
 
 public class PageResponse <T>{
     private List<T> records;
-    private int total;
+    private int pages;
     private int page;
 
     public PageResponse() {
     }
 
-    public PageResponse(List<T> records, int total, int page) {
+    public PageResponse(List<T> records, int pages, int page) {
         this.records = records;
-        this.total = total;
+        this.pages = pages;
         this.page = page;
     }
 
@@ -24,12 +24,12 @@ public class PageResponse <T>{
         this.records = records;
     }
 
-    public int getTotal() {
-        return total;
+    public int getPages() {
+        return pages;
     }
 
-    public void setTotal(int total) {
-        this.total = total;
+    public void setPages(int pages) {
+        this.pages = pages;
     }
 
     public int getPage() {
