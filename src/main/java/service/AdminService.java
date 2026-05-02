@@ -170,10 +170,10 @@ public class AdminService implements AdminServiceImp {
     @Override
     public PageResponse<ItemResponse> getItems(long adminId, int page) throws ServiceException {
         identify(adminId);
-        long offset = (long) (page - 1 + PAGE_SIZE) * PAGE_SIZE;
+        long offset = (long) (page - 1) * PAGE_SIZE;
         try {
             long total = itemDao.countAll();
-            long pages = total / PAGE_SIZE + 1;
+            long pages = (total+PAGE_SIZE-1) / PAGE_SIZE;
             List<Item> items = itemDao.findPage(offset, PAGE_SIZE);
             addImage(items);
             return new PageResponse<>(ItemResponse.dto(items), (int) pages, page);
@@ -185,10 +185,10 @@ public class AdminService implements AdminServiceImp {
     @Override
     public PageResponse<UserResponse> getUsers(long adminId, int page) throws ServiceException {
         identify(adminId);
-        long offset = (long) (page - 1 + PAGE_SIZE) * PAGE_SIZE;
+        long offset = (long) (page - 1 ) * PAGE_SIZE;
         try {
             long total = userDao.countAll();
-            long pages = total / PAGE_SIZE + 1;
+            long pages = (total-1+PAGE_SIZE) / PAGE_SIZE;
             List<User> users = userDao.findPage(offset, PAGE_SIZE);
             return new PageResponse<>(UserResponse.dto(users), (int) pages, page);
         } catch (SQLException e) {
