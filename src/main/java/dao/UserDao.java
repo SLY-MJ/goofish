@@ -109,11 +109,11 @@ public class UserDao {
         }
     }
 
-    public List<User> findPage(int offset, int pageSize) throws SQLException {
+    public List<User> findPage(long offset, int pageSize) throws SQLException {
         String sql = "select * from users where status<2 order by id desc limit ?,?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
-            ps.setInt(1, offset);
+            ps.setLong(1, offset);
             ps.setInt(2, pageSize);
 
             ResultSet rs = ps.executeQuery();
