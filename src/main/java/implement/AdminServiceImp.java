@@ -1,5 +1,8 @@
 package implement;
 
+import bean.ItemResponse;
+import bean.PageResponse;
+import bean.UserResponse;
 import entity.Item;
 import entity.User;
 import exception.ServiceException;
@@ -29,9 +32,9 @@ public interface AdminServiceImp {
 
     List<Item> getPendingItems(long adminId) throws ServiceException;
 
-    List<Item> getAllItems(long adminId) throws ServiceException;
+    PageResponse<ItemResponse> getItems(long adminId, int page) throws ServiceException;
 
-    List<User> getAllUsers(long adminId) throws ServiceException;
+    PageResponse<UserResponse> getUsers(long adminId, int page) throws ServiceException;
 
 
 }

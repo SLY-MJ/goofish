@@ -1,5 +1,8 @@
 package service;
 
+import bean.ItemResponse;
+import bean.PageResponse;
+import bean.UserResponse;
 import dao.CommentDao;
 import dao.ItemDao;
 import dao.ItemImageDao;
@@ -22,6 +25,7 @@ public class AdminService implements AdminServiceImp {
     private final ItemImageDao  itemImageDao = new ItemImageDao();
     private final CommentDao commentDao = new CommentDao();
     private final NotificationService notificationService = new NotificationService();
+    private final static int PAGE_SIZE = 20;
 
     @Override
     public User registerAdmin(long id, String username, String password) throws ServiceException {
@@ -164,22 +168,29 @@ public class AdminService implements AdminServiceImp {
     }
 
     @Override
-    public List<Item> getAllItems(long adminId) throws ServiceException {
+    public PageResponse<ItemResponse>getItems(long adminId, int page) throws ServiceException {
         identify(adminId);
+        long offset = (long) (page - 1) * PAGE_SIZE;
         try {
-            List<Item> items = itemDao.findAll();
+            long total=itemDao.countAll();
+            long pages=total/PAGE_SIZE+1;
+            List<Item> items = itemDao.findPage(offset,PAGE_SIZE);
             addImage(items);
-            return items;
+            return new PageResponse<>(ItemResponse.dto(items),(int)pages,page);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
 
     @Override
-    public List<User> getAllUsers(long adminId) throws ServiceException {
+    public PageResponse<UserResponse> getUsers(long adminId, int page) throws ServiceException {
         identify(adminId);
+        long offset = (long) (page - 1) * PAGE_SIZE;
         try {
-            return userDao.findAll();
+            long total=userDao.countAll();
+            long pages=total/PAGE_SIZE+1;
+            List<User> users = userDao.findPage(offset,PAGE_SIZE);
+            return new PageResponse<>(UserResponse.dto(users),(int)pages,page);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
