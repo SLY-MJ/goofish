@@ -22,7 +22,7 @@ import java.util.List;
 public class AdminService implements AdminServiceImp {
     private final UserDao userDao = new UserDao();
     private final ItemDao itemDao = new ItemDao();
-    private final ItemImageDao  itemImageDao = new ItemImageDao();
+    private final ItemImageDao itemImageDao = new ItemImageDao();
     private final CommentDao commentDao = new CommentDao();
     private final NotificationService notificationService = new NotificationService();
     private final static int PAGE_SIZE = 20;
@@ -168,15 +168,15 @@ public class AdminService implements AdminServiceImp {
     }
 
     @Override
-    public PageResponse<ItemResponse>getItems(long adminId, int page) throws ServiceException {
+    public PageResponse<ItemResponse> getItems(long adminId, int page) throws ServiceException {
         identify(adminId);
-        long offset = (long) (page - 1) * PAGE_SIZE;
+        long offset = (long) (page - 1 + PAGE_SIZE) * PAGE_SIZE;
         try {
-            long total=itemDao.countAll();
-            long pages=total/PAGE_SIZE+1;
-            List<Item> items = itemDao.findPage(offset,PAGE_SIZE);
+            long total = itemDao.countAll();
+            long pages = total / PAGE_SIZE + 1;
+            List<Item> items = itemDao.findPage(offset, PAGE_SIZE);
             addImage(items);
-            return new PageResponse<>(ItemResponse.dto(items),(int)pages,page);
+            return new PageResponse<>(ItemResponse.dto(items), (int) pages, page);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -185,12 +185,12 @@ public class AdminService implements AdminServiceImp {
     @Override
     public PageResponse<UserResponse> getUsers(long adminId, int page) throws ServiceException {
         identify(adminId);
-        long offset = (long) (page - 1) * PAGE_SIZE;
+        long offset = (long) (page - 1 + PAGE_SIZE) * PAGE_SIZE;
         try {
-            long total=userDao.countAll();
-            long pages=total/PAGE_SIZE+1;
-            List<User> users = userDao.findPage(offset,PAGE_SIZE);
-            return new PageResponse<>(UserResponse.dto(users),(int)pages,page);
+            long total = userDao.countAll();
+            long pages = total / PAGE_SIZE + 1;
+            List<User> users = userDao.findPage(offset, PAGE_SIZE);
+            return new PageResponse<>(UserResponse.dto(users), (int) pages, page);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
@@ -200,12 +200,12 @@ public class AdminService implements AdminServiceImp {
     public int getWeight(long adminId, long itemId) throws ServiceException {
         identify(adminId);
         try {
-            int weight= itemDao.findWight(itemId);
+            int weight = itemDao.findWight(itemId);
             if (weight < 0) {
                 throw new ServiceException(404, "Item not found");
             }
             return weight;
-        }catch (SQLException e) {
+        } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
         }
     }
@@ -232,23 +232,23 @@ public class AdminService implements AdminServiceImp {
         }
     }
 
-    private void addImage(Item item)throws ServiceException {
-        if (item!=null){
+    private void addImage(Item item) throws ServiceException {
+        if (item != null) {
             long id = item.getId();
             try {
-                ItemImage image=itemImageDao.findByItemIdAndOrder(id,1);
-                if (image!=null){
-                    String url=image.getImageUrl();
+                ItemImage image = itemImageDao.findByItemIdAndOrder(id, 1);
+                if (image != null) {
+                    String url = image.getImageUrl();
                     item.setCoverImage(url);
                 }
             } catch (SQLException e) {
-                throw new ServiceException(500,e.getMessage());
+                throw new ServiceException(500, e.getMessage());
             }
         }
     }
 
-    private void addImage(List<Item> items)throws ServiceException {
-        if (items!=null){
+    private void addImage(List<Item> items) throws ServiceException {
+        if (items != null) {
             for (Item item : items) {
                 addImage(item);
             }
