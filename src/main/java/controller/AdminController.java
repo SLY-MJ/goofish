@@ -33,6 +33,9 @@ public class AdminController extends BaseController {
 
     public void deleteUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long adminId = getLoginUserId(request, response);
+        long userId = Long.parseLong(request.getParameter("id"));
+        adminService.deleteUser(adminId, userId);
+        writeJson(response, new Response<>("删除用户成功", 200, null));
     }
 
     public void banUser(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
@@ -49,6 +52,8 @@ public class AdminController extends BaseController {
 
         long userId = Long.parseLong(request.getParameter("id"));
         adminService.unBanUser(adminId, userId);
+
+        writeJson(response, new Response<>("解封用户成功", 200, null));
     }
 
     public void deleteItem(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
@@ -89,6 +94,7 @@ public class AdminController extends BaseController {
         long itemId = Long.parseLong(request.getParameter("id"));
         int weight = Integer.parseInt(request.getParameter("weight"));
         adminService.updateWeight(adminId, itemId, weight);
+        writeJson(response, new Response<>("更新权重成功", 200, null));
     }
 
     public void getWeight(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
