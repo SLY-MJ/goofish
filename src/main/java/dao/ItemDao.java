@@ -274,7 +274,7 @@ public class ItemDao {
         if (excludeSellerId != null) {
             sql.append(" and seller_id<>?");
         }
-        sql.append(" order by rand() limit ?");
+        sql.append(" order by weight desc, rand() limit ?");
 
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql.toString());
