@@ -110,6 +110,35 @@ public class ItemDao {
         }
     }
 
+    public List<Item> findPage(int offset, int pageSize) throws SQLException {
+        String sql = "select * from items order by id desc limit ?,?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setInt(1, offset);
+            ps.setInt(2, pageSize);
+
+            ResultSet rs = ps.executeQuery();
+            List<Item> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(getItem(rs));
+            }
+            return list;
+        }
+    }
+
+    public long countAll() throws SQLException {
+        String sql = "select count(*) from items";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+            return 0;
+        }
+    }
+
+
     public int findWight(long id) throws SQLException {
         String sql = "select weight from items where id=?";
         try (Connection c = DbUtil.getConnection()) {
