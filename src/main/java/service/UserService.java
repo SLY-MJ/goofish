@@ -118,10 +118,8 @@ public class UserService implements UserServiceImp {
         }
 
         User user = getUserById(userId);
-        user.setWalletBalance(user.getWalletBalance() + amount);
-
         try {
-            userDao.updateWalletBalance(user);
+            userDao.updateWalletBalance(userId,user.getWalletBalance()+amount);
             return user;
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
