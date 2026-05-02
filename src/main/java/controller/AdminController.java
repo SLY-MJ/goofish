@@ -104,13 +104,17 @@ public class AdminController extends BaseController {
 
     public void getAllUsers(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long adminId = getLoginUserId(request, response);
-        int page = Integer.parseInt(request.getParameter("page"));
+        String pageParam = request.getParameter("page");
+        int page = pageParam == null ? 1 : Integer.parseInt(pageParam);
+        page = Math.max(page, 1);
         writeJson(response,new Response<>("ok",200,adminService.getUsers(adminId,page)));
     }
 
     public void getAllItems(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long adminId = getLoginUserId(request, response);
-        int page = Integer.parseInt(request.getParameter("page"));
+        String pageParam = request.getParameter("page");
+        int page = pageParam == null ? 1 : Integer.parseInt(pageParam);
+        page = Math.max(page, 1);
         writeJson(response,new Response<>("ok",200, adminService.getItems(adminId, page)));
     }
 }
