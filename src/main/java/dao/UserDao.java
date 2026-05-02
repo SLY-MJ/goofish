@@ -109,6 +109,35 @@ public class UserDao {
         }
     }
 
+    public List<User> findPage(int offset, int pageSize) throws SQLException {
+        String sql = "select * from users where status<2 order by id desc limit ?,?";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setInt(1, offset);
+            ps.setInt(2, pageSize);
+
+            ResultSet rs = ps.executeQuery();
+            List<User> users = new ArrayList<>();
+            while (rs.next()) {
+                users.add(getUser(rs));
+            }
+            return users;
+        }
+    }
+
+    public long countAll() throws SQLException {
+        String sql = "select count(*) from users where status<2";
+        try (Connection c = DbUtil.getConnection()) {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+            return 0;
+        }
+    }
+
+
     public List<User> search(String username) throws SQLException {
         String sql = "select * from users where username like ?and status<2";
         try (Connection c = DbUtil.getConnection()) {
