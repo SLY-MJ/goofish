@@ -110,11 +110,11 @@ public class ItemDao {
         }
     }
 
-    public List<Item> findPage(int offset, int pageSize) throws SQLException {
+    public List<Item> findPage(long offset, int pageSize) throws SQLException {
         String sql = "select * from items order by id desc limit ?,?";
         try (Connection c = DbUtil.getConnection()) {
             PreparedStatement ps = c.prepareStatement(sql);
-            ps.setInt(1, offset);
+            ps.setLong(1, offset);
             ps.setInt(2, pageSize);
 
             ResultSet rs = ps.executeQuery();
