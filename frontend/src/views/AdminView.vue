@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from "vue";
 
 import { approveItem, getPendingItems, registerAdmin, rejectItem } from "@/api/admin";
 import { getErrorMessage } from "@/api/http";
+import { getItemDetail } from "@/api/item";
 import { formatItemStatus, formatPrice, resolveImage } from "@/utils/format";
 
 const form = reactive({
@@ -16,6 +17,58 @@ const pageError = ref("");
 const successMessage = ref("");
 const pendingItems = ref([]);
 const rejectReasonMap = reactive({});
+const pendingDetailMap = reactive({});
+
+function clearPendingDetailMap() {
+  Object.keys(pendingDetailMap).forEach((key) => {
+    delete pendingDetailMap[key];
+  });
+}
+
+async function loadPendingDetails(items) {
+  clearPendingDetailMap();
+  if (!items.length) {
+    return;
+  }
+
+  const results = await Promise.allSettled(items.map((item) => getItemDetail(item.id)));
+  results.forEach((result, index) => {
+    const itemId = items[index].id;
+    pendingDetailMap[itemId] = result.status === "fulfilled" ? result.value : null;
+  });
+}
+
+function getItemDetailById(itemId) {
+  return pendingDetailMap[itemId] || null;
+}
+
+function getImages(item) {
+  const detail = getItemDetailById(item.id);
+  const images = (detail?.images || [])
+    .map((entry) => resolveImage(entry.imageUrl))
+    .filter(Boolean);
+  if (images.length) {
+    return images;
+  }
+
+  const cover = resolveImage(detail?.coverImage || item.coverImage);
+  return cover ? [cover] : [];
+}
+
+function getDescription(item) {
+  const detail = getItemDetailById(item.id);
+  return detail?.description || "暂无商品描述";
+}
+
+function getStock(item) {
+  const detail = getItemDetailById(item.id);
+  return detail?.stock ?? "-";
+}
+
+function getViewCount(item) {
+  const detail = getItemDetailById(item.id);
+  return detail?.viewCount ?? "-";
+}
 
 async function handleSubmit() {
   createLoading.value = true;
@@ -38,7 +91,9 @@ async function loadPendingItems() {
   reviewLoading.value = true;
   pageError.value = "";
   try {
-    pendingItems.value = await getPendingItems();
+    const items = await getPendingItems();
+    pendingItems.value = items || [];
+    await loadPendingDetails(pendingItems.value);
   } catch (error) {
     pageError.value = getErrorMessage(error, "加载待审核商品失败");
   } finally {
@@ -67,6 +122,7 @@ async function handleReject(itemId) {
     pageError.value = "请填写驳回原因";
     return;
   }
+
   reviewLoading.value = true;
   pageError.value = "";
   successMessage.value = "";
@@ -93,7 +149,7 @@ onMounted(loadPendingItems);
       </div>
 
       <p class="helper-text">
-        管理员删除入口已经分布在商品详情、评论区和用户主页中。这里包含新增管理员和商品审核能力。
+        这里支持新增管理员，以及审核待上架商品。
       </p>
 
       <form class="form-grid" @submit.prevent="handleSubmit">
@@ -133,14 +189,27 @@ onMounted(loadPendingItems);
           <div class="detail-stats">
             <span>卖家ID：{{ item.sellerId }}</span>
             <span>价格：{{ formatPrice(item.price) }}</span>
+            <span>库存：{{ getStock(item) }}</span>
+            <span>浏览：{{ getViewCount(item) }}</span>
           </div>
 
-          <img
-            v-if="resolveImage(item.coverImage)"
-            :src="resolveImage(item.coverImage)"
-            alt="cover"
-            style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px"
-          />
+          <p class="helper-text">{{ getDescription(item) }}</p>
+
+          <div class="admin-review-gallery">
+            <img
+              v-for="(url, index) in getImages(item)"
+              :key="`${item.id}-${index}`"
+              :src="url"
+              :alt="`${item.title}-${index + 1}`"
+              class="admin-review-gallery__item"
+            />
+          </div>
+
+          <div class="action-row">
+            <RouterLink class="button button--ghost" :to="{ name: 'item-detail', params: { id: item.id } }">
+              查看完整详情
+            </RouterLink>
+          </div>
 
           <label class="field">
             <span class="field__label">驳回原因</span>

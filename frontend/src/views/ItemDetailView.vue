@@ -36,7 +36,17 @@ const actionError = ref("");
 const successMessage = ref("");
 const commentText = ref("");
 
-const imageUrl = computed(() => resolveImage(item.value?.coverImage));
+const imageList = computed(() => {
+  const images = (item.value?.images || [])
+    .map((entry) => resolveImage(entry.imageUrl))
+    .filter(Boolean);
+  if (images.length) {
+    return images;
+  }
+  const cover = resolveImage(item.value?.coverImage);
+  return cover ? [cover] : [];
+});
+const imageUrl = computed(() => imageList.value[0] || "");
 const isOwner = computed(() => Number(authStore.user?.id) === Number(item.value?.sellerId));
 const isFavorite = computed(() => favoriteIds.value.includes(Number(item.value?.id)));
 const isFollowingSeller = computed(() => followIds.value.includes(Number(item.value?.sellerId)));
@@ -285,6 +295,15 @@ watch(
           <div class="detail-image">
             <img v-if="imageUrl" :src="imageUrl" :alt="item.title" />
             <div v-else class="image-placeholder image-placeholder--large">暂无图片</div>
+          </div>
+          <div v-if="imageList.length > 1" class="detail-thumbs">
+            <img
+              v-for="(url, index) in imageList"
+              :key="`${item.id}-${index}`"
+              :src="url"
+              :alt="`${item.title}-${index + 1}`"
+              class="detail-thumbs__item"
+            />
           </div>
         </article>
 

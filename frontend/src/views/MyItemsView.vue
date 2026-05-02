@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from "vue";
 
 import { getErrorMessage } from "@/api/http";
+import { uploadImageToImgbb } from "@/api/imageHost";
 import {
   deleteItem,
   editItem,
@@ -14,15 +15,17 @@ import ItemCard from "@/components/ItemCard.vue";
 const items = ref([]);
 const loading = ref(false);
 const actionLoading = ref(false);
+const imageUploading = ref(false);
 const pageError = ref("");
 const successMessage = ref("");
 const editError = ref("");
 const editingId = ref(null);
+const uploadStatus = ref("");
 
 const publishForm = reactive({
   title: "",
   price: "",
-  coverImage: "",
+  imageUrlsText: "",
   description: "",
 });
 
@@ -32,22 +35,12 @@ const editForm = reactive({
   description: "",
   price: "",
   stock: 1,
-  status: "SUBMITTED",
-  coverImage: "",
 });
-
-const statusOptions = [
-  { label: "待审核", value: "SUBMITTED" },
-  { label: "已驳回", value: "REJECTED" },
-  { label: "在售", value: "ON_SALE" },
-  { label: "已售出", value: "SOLD" },
-  { label: "已下架", value: "OFF_SHELF" },
-];
 
 function resetPublishForm() {
   publishForm.title = "";
   publishForm.price = "";
-  publishForm.coverImage = "";
+  publishForm.imageUrlsText = "";
   publishForm.description = "";
 }
 
@@ -58,9 +51,55 @@ function resetEditForm() {
   editForm.description = "";
   editForm.price = "";
   editForm.stock = 1;
-  editForm.status = "SUBMITTED";
-  editForm.coverImage = "";
   editError.value = "";
+}
+
+function parseImageUrls(text) {
+  if (!text || !text.trim()) {
+    return [];
+  }
+  return Array.from(
+    new Set(
+      text
+        .split(/\r?\n|,/) 
+        .map((entry) => entry.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
+async function handleUploadImages(event) {
+  const input = event.target;
+  const files = Array.from(input?.files || []);
+  if (!files.length) {
+    return;
+  }
+
+  pageError.value = "";
+  successMessage.value = "";
+  uploadStatus.value = "";
+
+  imageUploading.value = true;
+  try {
+    const uploadedUrls = [];
+    for (let i = 0; i < files.length; i += 1) {
+      uploadStatus.value = `正在上传 ${i + 1}/${files.length} 张图片...`;
+      const url = await uploadImageToImgbb(files[i]);
+      uploadedUrls.push(url);
+    }
+
+    const currentUrls = parseImageUrls(publishForm.imageUrlsText);
+    publishForm.imageUrlsText = [...currentUrls, ...uploadedUrls].join("\n");
+    successMessage.value = `上传成功，已追加 ${uploadedUrls.length} 张图片`;
+  } catch (error) {
+    pageError.value = getErrorMessage(error, "图片上传失败");
+  } finally {
+    imageUploading.value = false;
+    uploadStatus.value = "";
+    if (input) {
+      input.value = "";
+    }
+  }
 }
 
 async function loadItems() {
@@ -82,7 +121,18 @@ async function handlePublish() {
   pageError.value = "";
 
   try {
-    await publishItem(publishForm);
+    const imageUrls = parseImageUrls(publishForm.imageUrlsText);
+    if (!imageUrls.length) {
+      throw new Error("请至少填写一个图片地址");
+    }
+
+    await publishItem({
+      title: publishForm.title,
+      price: publishForm.price,
+      description: publishForm.description,
+      imageUrls: JSON.stringify(imageUrls),
+    });
+
     successMessage.value = "商品提交成功，等待管理员审核";
     resetPublishForm();
     await loadItems();
@@ -106,8 +156,6 @@ async function startEdit(itemId) {
     editForm.description = detail.description || "";
     editForm.price = detail.price;
     editForm.stock = detail.stock;
-    editForm.status = detail.status;
-    editForm.coverImage = detail.coverImage || "";
   } catch (error) {
     editError.value = getErrorMessage(error, "加载商品编辑信息失败");
   } finally {
@@ -121,7 +169,13 @@ async function handleUpdate() {
   editError.value = "";
 
   try {
-    await editItem(editForm);
+    await editItem({
+      id: editForm.id,
+      title: editForm.title,
+      description: editForm.description,
+      price: editForm.price,
+      stock: editForm.stock,
+    });
     successMessage.value = "商品更新成功";
     resetEditForm();
     await loadItems();
@@ -177,13 +231,26 @@ onMounted(loadItems);
         </label>
 
         <label class="field">
-          <span class="field__label">封面图片地址</span>
-          <input
-            v-model="publishForm.coverImage"
-            class="input"
-            type="text"
-            placeholder="可以填写图片 URL 或后端图片路径"
+          <span class="field__label">图片地址（每行一个，首行作为封面）</span>
+          <textarea
+            v-model="publishForm.imageUrlsText"
+            class="textarea"
+            rows="4"
+            placeholder="https://example.com/1.jpg&#10;https://example.com/2.jpg"
           />
+        </label>
+
+        <label class="field">
+          <span class="field__label">上传本地图片并自动填入地址</span>
+          <input
+            class="input"
+            type="file"
+            accept="image/*"
+            multiple
+            :disabled="imageUploading || actionLoading"
+            @change="handleUploadImages"
+          />
+          <span v-if="imageUploading" class="helper-text">{{ uploadStatus }}</span>
         </label>
 
         <label class="field">
@@ -259,20 +326,6 @@ onMounted(loadItems);
           <label class="field">
             <span class="field__label">库存</span>
             <input v-model="editForm.stock" class="input" type="number" min="1" step="1" />
-          </label>
-
-          <label class="field">
-            <span class="field__label">商品状态</span>
-            <select v-model="editForm.status" class="input">
-              <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span class="field__label">封面图片地址</span>
-            <input v-model="editForm.coverImage" class="input" type="text" />
           </label>
 
           <label class="field">

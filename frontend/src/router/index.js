@@ -8,6 +8,7 @@ import ItemDetailView from "@/views/ItemDetailView.vue";
 import LoginView from "@/views/LoginView.vue";
 import MyItemsView from "@/views/MyItemsView.vue";
 import NotFoundView from "@/views/NotFoundView.vue";
+import NotificationsView from "@/views/NotificationsView.vue";
 import OrdersView from "@/views/OrdersView.vue";
 import ProfileView from "@/views/ProfileView.vue";
 import RegisterView from "@/views/RegisterView.vue";
@@ -61,6 +62,12 @@ const routes = [
     name: "orders",
     component: OrdersView,
     meta: { title: "我的订单", requiresAuth: true },
+  },
+  {
+    path: "/notifications",
+    name: "notifications",
+    component: NotificationsView,
+    meta: { title: "系统通知", requiresAuth: true },
   },
   {
     path: "/profile",
