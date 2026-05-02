@@ -28,8 +28,8 @@ public class OrderController extends BaseController {
     public void createOrder(HttpServletRequest request, HttpServletResponse response) throws ServiceException {
         Long userId = getLoginUserId(request, response);
         long itemId = Long.parseLong(request.getParameter("itemId"));
-        long sellerId = Long.parseLong(request.getParameter("sellerId"));
-        orderService.add(itemId, userId, sellerId);
+        int number = Integer.parseInt(request.getParameter("number"));
+        orderService.add(itemId, userId, number);
         writeJson(response, new Response<>("ok", 200, null));
     }
 
