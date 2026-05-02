@@ -151,6 +151,13 @@ public class AdminService implements AdminServiceImp {
     public void updateWeight(long adminId, long itemId, int weight) throws ServiceException {
         identify(adminId);
         try {
+            Item item = itemDao.findById(itemId);
+            if (item == null || item.isDeleted()) {
+                throw new ServiceException(404, "Item not found");
+            }
+            if (weight < 0) {
+                throw new ServiceException(400, "Weight must be non-negative");
+            }
             itemDao.updateWeight(itemId, weight);
         } catch (SQLException e) {
             throw new ServiceException(500, e.getMessage());
